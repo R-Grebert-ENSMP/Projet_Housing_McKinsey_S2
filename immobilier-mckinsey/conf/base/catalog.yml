@@ -104,3 +104,18 @@ etablissements-scolaires :
 	type : pandas.CSVDataSet
 	filepath: "data/01_raw/etablissements-scolaires.csv"
 
+logements-sociaux-finances-a-paris : 
+	type : pandas.CSVDataSet
+	filepath: "data/01_raw/logements-sociaux-finances-a-paris.csv"
+
+positions-geographiques-des-stations-du-reseau-ratp : 
+	type : pandas.CSVDataSet
+	filepath: "data/01_raw/positions-geographiques-des-stations-du-reseau-ratp.csv"
+
+MOD_LOGEMT_2015 : 
+	type : pandas.TextDataSet
+	filepath: "data/01_raw/MOD_LOGEMT_2015.txt"
+
+FD_LOGEMTZA_2015 : 
+	type : pandas.TextDataSet
+	filepath: "data/01_raw/FD_LOGEMTZA_2015.txt"

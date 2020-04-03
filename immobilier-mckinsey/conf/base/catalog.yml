@@ -64,3 +64,18 @@ adresses-cadastres-75 :
 	type : pandas.CSVDataSet
 	filepath: "data/01_raw/Cadastre_75/adresses-cadastre-75"
 
+commercesparis : 
+	type : pandas.CSVDataSet
+	filepath: "data/01_raw/commercesparis.csv"
+
+EMPRISE_BATIE_PARIS : 
+	type : pandas.CSVDataSet
+	filepath: "data/01_raw/EMPRISE_BATIE_PARIS.csv"
+
+emprise-batie-et-non-batie : 
+	type : pandas.CSVDataSet
+	filepath: "data/01_raw/emprise-batie-et-non-batie.csv"
+
+etablissements-scolaires : 
+	type : pandas.CSVDataSet
+	filepath: "data/01_raw/etablissements-scolaires.csv"

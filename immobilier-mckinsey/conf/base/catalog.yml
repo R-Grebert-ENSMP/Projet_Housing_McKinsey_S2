@@ -39,3 +39,23 @@
 # (transcoding), templating and a way to reuse arguments that are frequently repeated. See more here:
 # https://kedro.readthedocs.io/en/stable/04_user_guide/04_data_catalog.html
 
+valeursfoncieres-2014:
+  type: pandas.TextDataSet
+  filepath: data/01_raw/valeursfoncieres-2014.txt
+
+valeursfoncieres-2015:
+  type: pandas.TextDataSet
+  filepath: data/01_raw/valeursfoncieres-2015.txt
+
+valeursfoncieres-2016:
+  type: pandas.TextDataSet
+  filepath: data/01_raw/valeursfoncieres-2016.txt
+
+valeursfoncieres-2017:
+  type: pandas.TextDataSet
+  filepath: data/01_raw/valeursfoncieres-2017.txt
+
+valeursfoncieres-2018:
+  type: pandas.TextDataSet
+  filepath: data/01_raw/valeursfoncieres-2018.txt
+

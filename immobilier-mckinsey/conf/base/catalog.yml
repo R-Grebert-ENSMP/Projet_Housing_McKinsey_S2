@@ -62,31 +62,31 @@ valeursfoncieres-2018:
 
 adresses-cadastres-75 : 
 	type : pandas.CSVDataSet
-	filepath: "data/01_raw/Cadastre_75/adresses-cadastre-75"
+	filepath: "data/01_raw/Cadastre_75/adresses-cadastre-75.csv"
 
 export-paris2014 : 
 	type : pandas.CSVDataSet
-	filepath: "data/01_raw/Cadastre_75/export-paris2014.csv"
+	filepath: "data/01_raw/export-paris2014.csv"
 
 export-paris2015 : 
 	type : pandas.CSVDataSet
-	filepath: "data/01_raw/Cadastre_75/export-paris2015.csv"
+	filepath: "data/01_raw/export-paris2015.csv"
 
 export-paris2016 : 
 	type : pandas.CSVDataSet
-	filepath: "data/01_raw/Cadastre_75/export-paris2016.csv"
+	filepath: "data/01_raw/export-paris2016.csv"
 
 export-paris2017 : 
 	type : pandas.CSVDataSet
-	filepath: "data/01_raw/Cadastre_75/export-paris2017.csv"
+	filepath: "data/01_raw/export-paris2017.csv"
 
 export-paris2018 : 
 	type : pandas.CSVDataSet
-	filepath: "data/01_raw/Cadastre_75/export-paris2018.csv"
+	filepath: "data/01_raw/export-paris2018.csv"
 
 export-paris2019 : 
 	type : pandas.CSVDataSet
-	filepath: "data/01_raw/Cadastre_75/export-paris2019.csv"
+	filepath: "data/01_raw/export-paris2019.csv"
 
 commercesparis : 
 	type : pandas.CSVDataSet

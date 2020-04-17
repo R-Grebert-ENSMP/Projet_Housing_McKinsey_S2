@@ -4,7 +4,7 @@ import time
 pd.all=pd.read_csv('Desktop/valeursfoncieres-2015.txt', sep='|', engine='python')
 
 ##
-def mask_vf(df, arrond):
+def mask_vf(df):
     df_paris = pd.DataFrame(columns = df.columns)
     for i in range (75001, 75021):
         df_paris = master.append(cond(df, 'Code postal', i))

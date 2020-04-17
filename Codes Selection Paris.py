@@ -1,35 +1,35 @@
 import pandas as pd
+import time
 
-#pd.all=pd.read_csv('Desktop/valeursfoncieres-2015.txt', sep='|', engine='python')
-
-def mask(df):
-    master=pd.DataFrame(columns=df.columns)
-    for i in range (75001, 75021):
-        master=master.append(cond(df, 'Code postal', i))
-    return master
-
-def cond(df, key, value):
-    return df[df[key] == value]
+pd.all=pd.read_csv('Desktop/valeursfoncieres-2015.txt', sep='|', engine='python')
 
 ##
-def duplica(df):
-    master = df
-    n = len(df.index)
+def mask_vf(df, arrond):
+    df_paris = pd.DataFrame(columns = df.columns)
+    for i in range (75001, 75021):
+        df_paris = master.append(cond(df, 'Code postal', i))
+    return df_paris
+
+def cond(df, code_postal, arrond):
+    return df[df[code_postal] == arrond]
+
+def duplica(df_paris):
+    master = df_paris
+    length_paris = len(df_paris.index)
     master.index = [i for i in range (n)]
-    L = master['Surface reelle bati']
+    C_surface = np.array(master['Surface reelle bati'])
     i = 0
     while i < n-1:
         k = 1
-        a = master.loc[i]['Surface reelle bati']
+        surface_i = master.loc[i]['Surface reelle bati']
         if master.duplicated(['Valeur fonciere', 'Date mutation', 'Section'])[i]:
             while master.loc[i]['Section'] == master.loc[i+k]['Section']:
-                a += master.loc[i+k]['Surface reelle bati']
+                surface_i += master.loc[i+k]['Surface reelle bati']
                 k += 1
+            C_surface[i] = surface_i
         i += k
-        L[i] = a
-    return L
+    del master['Surface reelle bati']
+    master.insert(38,'Surface reelle bati' ,C_surface)
+    return master.drop_duplicates(['Date mutation', 'Valeur fonciere', 'Section'], keep='first')
 
-for i in L:
-    if i%100==0:
-        print(i)
-    master_test['Surface reelle bati'].replace(master_test['Surface reelle bati'], i)
+

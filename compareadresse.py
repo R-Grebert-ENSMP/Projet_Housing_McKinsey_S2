@@ -1,6 +1,7 @@
 import sys
 import numpy as np
 import jellyfish
+<<<<<<< HEAD
 #import nltk
 #from nltk.corpus import stopwords
 
@@ -39,6 +40,15 @@ def normalisation(string):
     voie = voie.lower()
     voie = deletewords(voie)
     return voie
+=======
+import nltk
+from nltk.corpus import stopwords
+
+
+#test1 = 'GEN LEMONNIER'
+#test2= "du GÃ©nÃ©ral Lemonnier"
+
+>>>>>>> 8a6f1f1c9eb597fbe2e8190f38b85bc7760d0ec7
 
 def compare(num1, type1, voie1, num2, type2, voie2):
     voie1 = normalisation(" " + voie1) #normalise l'écriture, minuscule sans accent, sans apostrophe, sans stopwords
@@ -46,7 +56,7 @@ def compare(num1, type1, voie1, num2, type2, voie2):
     distance = jellyfish.jaro_distance(voie1, voie2)
     if num1==num2 and type1==type2 and distance > 0.9 : #possibilité de rajouter une sélection sur la distance minimale
         return True
-    else : 
+    else :
         return False
 
 print(compare(4, 'rue', test1 , 4, 'rue', test2))

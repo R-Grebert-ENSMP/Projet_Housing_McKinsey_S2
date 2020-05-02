@@ -1,6 +1,10 @@
 import sys
 import numpy as np
 import jellyfish
+<<<<<<< HEAD
+=======
+#<<<<<<< HEAD
+>>>>>>> 5ff67fe6b6b2ced7c43389ada6f529ba63169ac1
 #import nltk
 #from nltk.corpus import stopwords
 
@@ -40,6 +44,18 @@ def normalisation(string):
     voie = voie.lower()
     voie = deletewords(voie)
     return voie
+<<<<<<< HEAD
+=======
+#=======
+import nltk
+from nltk.corpus import stopwords
+
+
+#test1 = 'GEN LEMONNIER'
+#test2= "du GÃ©nÃ©ral Lemonnier"
+
+#>>>>>>> 8a6f1f1c9eb597fbe2e8190f38b85bc7760d0ec7
+>>>>>>> 5ff67fe6b6b2ced7c43389ada6f529ba63169ac1
 
 def compare(num1, type1, voie1, num2, type2, voie2):
     voie1 = normalisation(" " + voie1) #normalise l'écriture, minuscule sans accent, sans apostrophe, sans stopwords

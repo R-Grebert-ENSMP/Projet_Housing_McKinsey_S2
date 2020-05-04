@@ -7,11 +7,13 @@ import folium
 from shapely.geometry import Point, Polygon
 import geopandas
 
-def cond(df, code_postal, arrond): """Le but de cond est de selectionner la partie du tableau correspond au code postal voulue"""
+def cond(df, code_postal, arrond):
+    """Le but de cond est de selectionner la partie du tableau correspond au code postal voulue"""
     return df[df[code_postal] == arrond]
 
 
-def duplica(df_paris):"""duplica prend en entrée une partie de valeur fonciere, additionne les surface d'un même lot et supprime les lignes non nécessaires de ce lot afin d'avoir une unique ligne par adresse"""
+def duplica(df_paris):
+    """duplica prend en entrée une partie de valeur fonciere, additionne les surface d'un même lot et supprime les lignes non nécessaires de ce lot afin d'avoir une unique ligne par adresse"""
     master = df_paris
     length_paris = len(df_paris.index)
     master.index = [i for i in range (n)]
@@ -113,11 +115,14 @@ def normalisation_adresse(voie) :
     return voie
 
 
-def compare(num1, type1, voie1, num2, type2, voie2):"""compare l'adresse de 2 lignes afin de savoir si ce sont les mêmes"""
-    voie1 = normalisation_adresse(voie1) """normalise l'écriture, minuscule sans accent, sans apostrophe, sans stopwords"""
+def compare(num1, type1, voie1, num2, type2, voie2):
+    """compare l'adresse de 2 lignes afin de savoir si ce sont les mêmes"""
+    voie1 = normalisation_adresse(voie1)
+    # normalise l'écriture, minuscule sans accent, sans apostrophe, sans stopwords
     voie2 = normalisation_adresse(voie2)
     distance = jellyfish.jaro_distance(normalisation_adresse(voie1), normalisation_adresse(voie2))
-    if num1==num2 and type1==type2 and distance > 0.8 : """possibilité de rajouter une sélection sur la distance minimale"""
+    if num1==num2 and type1==type2 and distance > 0.8 :
+        #possibilité de rajouter une sélection sur la distance minimale
         return True
     else : 
         return False

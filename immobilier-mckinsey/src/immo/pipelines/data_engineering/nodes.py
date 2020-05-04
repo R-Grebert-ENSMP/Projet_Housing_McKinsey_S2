@@ -7,9 +7,12 @@ import folium
 from shapely.geometry import Point, Polygon
 import geopandas
 
+def first_digits(number):
+    return int(str(number)[:2])
+
 def cond(df, code_postal, arrond):
     """Le but de cond est de selectionner la partie du tableau correspond au code postal voulue"""
-    return df[df[code_postal] == arrond]
+    return df[df[code_postal].apply(first_digits) == arrond]
 
 
 def duplica(df_paris):

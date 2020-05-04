@@ -2,8 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="e5a2c5ed-14ca-4ecd-b67e-c4c3a8288231" name="Default" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/immobilier-mckinsey/ML-I_Data_preparation.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/immobilier-mckinsey/ML-I_Data_preparation.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/immobilier-mckinsey/conf/base/catalog.yml" beforeDir="false" afterPath="$PROJECT_DIR$/immobilier-mckinsey/conf/base/catalog.yml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/immobilier-mckinsey/src/immo/pipeline.py" beforeDir="false" afterPath="$PROJECT_DIR$/immobilier-mckinsey/src/immo/pipeline.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/immobilier-mckinsey/src/immo/pipelines/data_engineering/nodes.py" beforeDir="false" afterPath="$PROJECT_DIR$/immobilier-mckinsey/src/immo/pipelines/data_engineering/nodes.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/immobilier-mckinsey/src/immo/pipelines/data_engineering/pipeline.py" beforeDir="false" afterPath="$PROJECT_DIR$/immobilier-mckinsey/src/immo/pipelines/data_engineering/pipeline.py" afterDir="false" />
@@ -21,7 +20,7 @@
         <entry file="file://$PROJECT_DIR$/immobilier-mckinsey/src/immo/pipeline.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="272">
-              <caret line="16" lean-forward="true" selection-start-line="16" selection-end-line="16" />
+              <caret line="16" selection-start-line="16" selection-end-line="16" />
               <folding>
                 <element signature="e#45#68#0" expanded="true" />
               </folding>
@@ -29,104 +28,80 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="nodes.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/immobilier-mckinsey/src/immo/pipelines/data_engineering/nodes.py">
+      <file leaf-file-name="test_run.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/immobilier-mckinsey/src/tests/test_run.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="136">
-              <caret line="8" lean-forward="true" selection-start-line="8" selection-end-line="8" />
+            <state relative-caret-position="507">
+              <caret line="51" column="68" lean-forward="true" selection-start-line="51" selection-start-column="68" selection-end-line="51" selection-end-column="68" />
               <folding>
-                <element signature="e#0#11#0" expanded="true" />
+                <element signature="e#1704#1728#0" expanded="true" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="corr_type_voie_VF.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/corr_type_voie_VF.py">
+      <file leaf-file-name="catalog.yml" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/test/conf/base/catalog.yml">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-128">
-              <folding>
-                <element signature="e#0#19#0" expanded="true" />
-              </folding>
-            </state>
+            <state relative-caret-position="-298" />
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="compareadresse.py" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/compareadresse.py">
+      <file leaf-file-name="credentials.yml" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/test/conf/base/credentials.yml">
+          <provider selected="true" editor-type-id="text-editor" />
+        </entry>
+      </file>
+      <file leaf-file-name="logging.yml" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/test/conf/base/logging.yml">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-669">
-              <folding>
-                <element signature="e#0#10#0" expanded="true" />
-              </folding>
-            </state>
+            <state relative-caret-position="-459" />
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="merger_cadastre_VF.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/merger_cadastre_VF.py">
+      <file leaf-file-name="pipeline.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/test/src/testpack/pipeline.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state>
+            <state relative-caret-position="-508">
               <folding>
-                <element signature="e#0#19#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="merger.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/merger.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-125">
-              <folding>
-                <element signature="e#0#19#0" expanded="true" />
+                <element signature="e#1472#1495#0" expanded="true" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
       <file leaf-file-name="pipeline.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/immobilier-mckinsey/src/immo/pipelines/data_engineering/pipeline.py">
+        <entry file="file://$PROJECT_DIR$/test/src/testpack/pipelines/data_engineering/pipeline.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="272">
-              <caret line="25" column="59" selection-start-line="25" selection-start-column="59" selection-end-line="25" selection-end-column="59" />
+            <state relative-caret-position="248">
+              <caret line="34" selection-start-line="34" selection-end-line="34" />
               <folding>
-                <element signature="e#0#41#0" expanded="true" />
+                <element signature="e#1613#1654#0" expanded="true" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="Nodes_McKinsey.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/Nodes_McKinsey.py">
+      <file leaf-file-name="nodes.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/test/src/testpack/pipelines/data_engineering/nodes.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state>
+            <state relative-caret-position="-407">
               <folding>
-                <element signature="e#0#19#0" expanded="true" />
+                <element signature="e#1618#1646#0" expanded="true" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="normalisation_et_stop_words.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/normalisation_et_stop_words.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-1">
-              <folding>
-                <element signature="e#21#31#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
+      <file leaf-file-name="parameters.yml" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/test/conf/base/parameters.yml">
+          <provider selected="true" editor-type-id="text-editor" />
         </entry>
       </file>
-      <file leaf-file-name="rajout_prix_m2.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/rajout_prix_m2.py">
+      <file leaf-file-name="requirements.txt" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/immobilier-mckinsey/src/requirements.txt">
           <provider selected="true" editor-type-id="text-editor">
-            <state>
-              <folding>
-                <element signature="e#0#19#0" expanded="true" />
-              </folding>
-            </state>
+            <state relative-caret-position="-918" />
           </provider>
         </entry>
       </file>
@@ -141,6 +116,7 @@
         <option value="$PROJECT_DIR$/immobilier-mckinsey/src/immo/pipelines/data_engineering/nodes.py" />
         <option value="$PROJECT_DIR$/immobilier-mckinsey/src/immo/pipeline.py" />
         <option value="$PROJECT_DIR$/immobilier-mckinsey/src/immo/pipelines/data_engineering/pipeline.py" />
+        <option value="$PROJECT_DIR$/immobilier-mckinsey/conf/base/catalog.yml" />
       </list>
     </option>
   </component>
@@ -165,97 +141,59 @@
             <path>
               <item name="Projet_Housing_McKinsey_S2" type="b2602c69:ProjectViewProjectNode" />
               <item name="Projet_Housing_McKinsey_S2" type="462c0819:PsiDirectoryNode" />
-              <item name="immobilier-mckinsey" type="462c0819:PsiDirectoryNode" />
+              <item name="test" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="Projet_Housing_McKinsey_S2" type="b2602c69:ProjectViewProjectNode" />
               <item name="Projet_Housing_McKinsey_S2" type="462c0819:PsiDirectoryNode" />
-              <item name="immobilier-mckinsey" type="462c0819:PsiDirectoryNode" />
+              <item name="test" type="462c0819:PsiDirectoryNode" />
               <item name="conf" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="Projet_Housing_McKinsey_S2" type="b2602c69:ProjectViewProjectNode" />
               <item name="Projet_Housing_McKinsey_S2" type="462c0819:PsiDirectoryNode" />
-              <item name="immobilier-mckinsey" type="462c0819:PsiDirectoryNode" />
+              <item name="test" type="462c0819:PsiDirectoryNode" />
               <item name="conf" type="462c0819:PsiDirectoryNode" />
               <item name="base" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="Projet_Housing_McKinsey_S2" type="b2602c69:ProjectViewProjectNode" />
               <item name="Projet_Housing_McKinsey_S2" type="462c0819:PsiDirectoryNode" />
-              <item name="immobilier-mckinsey" type="462c0819:PsiDirectoryNode" />
-              <item name="data" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="Projet_Housing_McKinsey_S2" type="b2602c69:ProjectViewProjectNode" />
-              <item name="Projet_Housing_McKinsey_S2" type="462c0819:PsiDirectoryNode" />
-              <item name="immobilier-mckinsey" type="462c0819:PsiDirectoryNode" />
-              <item name="data" type="462c0819:PsiDirectoryNode" />
-              <item name="03_primary" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="Projet_Housing_McKinsey_S2" type="b2602c69:ProjectViewProjectNode" />
-              <item name="Projet_Housing_McKinsey_S2" type="462c0819:PsiDirectoryNode" />
-              <item name="immobilier-mckinsey" type="462c0819:PsiDirectoryNode" />
-              <item name="docs" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="Projet_Housing_McKinsey_S2" type="b2602c69:ProjectViewProjectNode" />
-              <item name="Projet_Housing_McKinsey_S2" type="462c0819:PsiDirectoryNode" />
-              <item name="immobilier-mckinsey" type="462c0819:PsiDirectoryNode" />
-              <item name="docs" type="462c0819:PsiDirectoryNode" />
-              <item name="source" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="Projet_Housing_McKinsey_S2" type="b2602c69:ProjectViewProjectNode" />
-              <item name="Projet_Housing_McKinsey_S2" type="462c0819:PsiDirectoryNode" />
-              <item name="immobilier-mckinsey" type="462c0819:PsiDirectoryNode" />
-              <item name="notebooks" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="Projet_Housing_McKinsey_S2" type="b2602c69:ProjectViewProjectNode" />
-              <item name="Projet_Housing_McKinsey_S2" type="462c0819:PsiDirectoryNode" />
-              <item name="immobilier-mckinsey" type="462c0819:PsiDirectoryNode" />
+              <item name="test" type="462c0819:PsiDirectoryNode" />
               <item name="src" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="Projet_Housing_McKinsey_S2" type="b2602c69:ProjectViewProjectNode" />
               <item name="Projet_Housing_McKinsey_S2" type="462c0819:PsiDirectoryNode" />
-              <item name="immobilier-mckinsey" type="462c0819:PsiDirectoryNode" />
+              <item name="test" type="462c0819:PsiDirectoryNode" />
               <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="immo" type="462c0819:PsiDirectoryNode" />
+              <item name="testpack" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="Projet_Housing_McKinsey_S2" type="b2602c69:ProjectViewProjectNode" />
               <item name="Projet_Housing_McKinsey_S2" type="462c0819:PsiDirectoryNode" />
-              <item name="immobilier-mckinsey" type="462c0819:PsiDirectoryNode" />
+              <item name="test" type="462c0819:PsiDirectoryNode" />
               <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="immo" type="462c0819:PsiDirectoryNode" />
-              <item name="nodes" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="Projet_Housing_McKinsey_S2" type="b2602c69:ProjectViewProjectNode" />
-              <item name="Projet_Housing_McKinsey_S2" type="462c0819:PsiDirectoryNode" />
-              <item name="immobilier-mckinsey" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="immo" type="462c0819:PsiDirectoryNode" />
+              <item name="testpack" type="462c0819:PsiDirectoryNode" />
               <item name="pipelines" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="Projet_Housing_McKinsey_S2" type="b2602c69:ProjectViewProjectNode" />
               <item name="Projet_Housing_McKinsey_S2" type="462c0819:PsiDirectoryNode" />
-              <item name="immobilier-mckinsey" type="462c0819:PsiDirectoryNode" />
+              <item name="test" type="462c0819:PsiDirectoryNode" />
               <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="immo" type="462c0819:PsiDirectoryNode" />
+              <item name="testpack" type="462c0819:PsiDirectoryNode" />
               <item name="pipelines" type="462c0819:PsiDirectoryNode" />
               <item name="data_engineering" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="Projet_Housing_McKinsey_S2" type="b2602c69:ProjectViewProjectNode" />
               <item name="Projet_Housing_McKinsey_S2" type="462c0819:PsiDirectoryNode" />
-              <item name="immobilier-mckinsey" type="462c0819:PsiDirectoryNode" />
+              <item name="test" type="462c0819:PsiDirectoryNode" />
               <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="tests" type="462c0819:PsiDirectoryNode" />
+              <item name="testpack" type="462c0819:PsiDirectoryNode" />
+              <item name="pipelines" type="462c0819:PsiDirectoryNode" />
+              <item name="data_science" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
@@ -414,22 +352,6 @@
     <entry file="file://$PROJECT_DIR$/immobilier-mckinsey/kedro_cli.py">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
-    <entry file="file://$PROJECT_DIR$/immobilier-mckinsey/src/requirements.txt">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/immobilier-mckinsey/src/tests/test_run.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="484">
-          <caret line="51" column="68" lean-forward="true" selection-start-line="51" selection-start-column="68" selection-end-line="51" selection-end-column="68" />
-          <folding>
-            <element signature="e#1704#1728#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/immobilier-mckinsey/.gitignore">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
     <entry file="file://$PROJECT_DIR$/immobilier-mckinsey/.kedro.yml">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
@@ -447,17 +369,6 @@
         <state>
           <selected id="0" />
         </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/immobilier-mckinsey/conf/base/parameters.yml">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/immobilier-mckinsey/conf/base/logging.yml">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/immobilier-mckinsey/conf/base/catalog.yml">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-510" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/separateur_cadastre.py">
@@ -492,36 +403,6 @@
         <state>
           <folding>
             <element signature="e#0#19#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/immobilier-mckinsey/src/immo/pipeline.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="272">
-          <caret line="16" lean-forward="true" selection-start-line="16" selection-end-line="16" />
-          <folding>
-            <element signature="e#45#68#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/immobilier-mckinsey/src/immo/pipelines/data_engineering/nodes.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="136">
-          <caret line="8" lean-forward="true" selection-start-line="8" selection-end-line="8" />
-          <folding>
-            <element signature="e#0#11#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/immobilier-mckinsey/src/immo/pipelines/data_engineering/pipeline.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="272">
-          <caret line="25" column="59" selection-start-line="25" selection-start-column="59" selection-end-line="25" selection-end-column="59" />
-          <folding>
-            <element signature="e#0#41#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -570,6 +451,127 @@
           </folding>
         </state>
       </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/immobilier-mckinsey/src/immo/pipelines/data_engineering/nodes.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="289">
+          <caret line="17" column="22" selection-start-line="17" selection-start-column="22" selection-end-line="17" selection-end-column="22" />
+          <folding>
+            <element signature="e#0#11#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/immobilier-mckinsey/.gitignore">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/immobilier-mckinsey/data/01_raw/valeursfoncieres-2014.txt">
+      <provider selected="true" editor-type-id="LargeFileEditor">
+        <state>
+          <caret column="224" selection-start-column="208" selection-end-column="224" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/immobilier-mckinsey/src/immo/pipelines/data_engineering/pipeline.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="204">
+          <caret line="12" column="31" selection-start-line="12" selection-start-column="31" selection-end-line="12" selection-end-column="31" />
+          <folding>
+            <element signature="e#0#41#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/immobilier-mckinsey/data/01_raw/adresses-cadastre-75.csv">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <caret selection-end-column="11" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/immobilier-mckinsey/conf/base/logging.yml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-153" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/immobilier-mckinsey/conf/base/parameters.yml">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/immobilier-mckinsey/conf/base/catalog.yml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="756">
+          <caret line="46" column="43" selection-start-line="44" selection-start-column="2" selection-end-line="46" selection-end-column="43" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/immobilier-mckinsey/src/requirements.txt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-918" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/immobilier-mckinsey/src/immo/pipeline.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="272">
+          <caret line="16" selection-start-line="16" selection-end-line="16" />
+          <folding>
+            <element signature="e#45#68#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/immobilier-mckinsey/src/tests/test_run.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="507">
+          <caret line="51" column="68" lean-forward="true" selection-start-line="51" selection-start-column="68" selection-end-line="51" selection-end-column="68" />
+          <folding>
+            <element signature="e#1704#1728#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/test/src/testpack/pipeline.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-508">
+          <folding>
+            <element signature="e#1472#1495#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/test/src/testpack/pipelines/data_engineering/nodes.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-407">
+          <folding>
+            <element signature="e#1618#1646#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/test/src/testpack/pipelines/data_engineering/pipeline.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="248">
+          <caret line="34" selection-start-line="34" selection-end-line="34" />
+          <folding>
+            <element signature="e#1613#1654#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/test/conf/base/catalog.yml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-298" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/test/conf/base/credentials.yml">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/test/conf/base/logging.yml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-459" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/test/conf/base/parameters.yml">
+      <provider selected="true" editor-type-id="text-editor" />
     </entry>
   </component>
 </project>

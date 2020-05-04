@@ -6,8 +6,11 @@ from immo.pipelines.data_engineering.nodes import (
     corr_type_de_voie,
 )
 
+CODE_POSTAL_CADASTRE = 'code_postal'
+CODE_POSTAL_VF = 'code_postal'
+ARRONDI=750
 
-def pipeline_merge_arrond_2014(i, **kwargs):
+def pipeline_merge_arrond_2014( **kwargs):
     return Pipeline (
     [   
         node(func = sep_voies,
@@ -17,38 +20,17 @@ def pipeline_merge_arrond_2014(i, **kwargs):
         ),
         
         node(func = cond,
-            inputs = ['cadastre_trié', 'code_postal'],
+            inputs = ['cadastre_trié', 'CODE_POSTAL_CADASTRE', 'ARRONDI'],
             outputs = 'cadastre_i',
             name = 'cadastre_i',
         ),
         
         node(func = cond,
-            inputs = ['valeursfonciere-2014', 'Code postal'],
+            inputs = ['valeursfonciere-2014', 'CODE_POSTAL_VF','ARRONDI'],
             outputs = 'master_2014i1_nt',#nt pour non triée
             name = 'vf_2014_i_nt',
         ),
-        
-        node(func = duplica,
-            inputs = ['master_2014_i_nt'],
-            outputs = 'master_2014_i_nc', #nc pour on corrigé
-            name = 'vf_2014_i_nc',
-        ),
-        
-        node(func = corr_type_de_voie,
-            inputs = ['master_2014_i_nc'],
-            outputs = 'master_2014_i_n', 
-            name = 'vf_2014_i_n',
-        ),
-        
-        node(func = corr_type_de_voie,
-            inputs = ['master_2014_i_n'],
-            outputs = 'master_2014_i', 
-            name = 'vf_2014_i',
-        ),
-        
-        #On a cadastre du ième arrondissement avec les bonnes colonnes et valeurs foncières 2014 du ième arrondissement avec le nom des voies corrigées
-        
-    ]
+        ]
     )
     
     

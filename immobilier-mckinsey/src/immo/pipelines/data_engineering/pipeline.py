@@ -16,20 +16,15 @@ def pipeline_merge_arrond_2014( **kwargs):
         node(func = sep_voies,
             inputs = ['adresses-cadastre-75'],
             outputs = 'cadastre_trié',
-            name = 'cadastre_trié',
+            name = 'cadastre_trié'
         ),
         
-        node(func = cond,
-            inputs = ['cadastre_trié', 'CODE_POSTAL_CADASTRE', 'ARRONDI'],
-            outputs = 'cadastre_i',
-            name = 'cadastre_i',
-        ),
-        
-        node(func = cond,
-            inputs = ['valeursfonciere-2014', 'CODE_POSTAL_VF','ARRONDI'],
-            outputs = 'master_2014i1_nt',#nt pour non triée
-            name = 'vf_2014_i_nt',
-        ),
+        #node(func = cond,
+        #   inputs = dict(df= 'cadastre_trié', code_postal=CODE_POSTAL_CADASTRE,arrond=ARRONDI),
+        #    outputs = 'cadastre_i',
+        #    name = 'cadastre_i'
+        #),
+
         ]
     )
     

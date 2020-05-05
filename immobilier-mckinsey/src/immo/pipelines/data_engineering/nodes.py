@@ -43,6 +43,7 @@ def sep_voies(df):
     '''
     TDV = []
     NV = []
+    print (df.columns)
     for i in df['voie_nom']:
 
         a = i.split(' ')

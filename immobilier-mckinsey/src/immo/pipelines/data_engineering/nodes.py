@@ -6,14 +6,22 @@ import matplotlib.pyplot as plt
 import folium
 from shapely.geometry import Point, Polygon
 import geopandas
+CODE_POSTAL_CADASTRE = 'code_postal'
+CODE_POSTAL_VF = 'code_postal'
+ARRONDI=750
 
 def first_digits(number):
-    return int(str(number)[:2])
+    if str(number)[:2]!='na':
+        return int(str(number)[:2])
+    else:
+        return 0
 
 def cond(df, code_postal, arrond):
     """Le but de cond est de selectionner la partie du tableau correspond au code postal voulue"""
     return df[df[code_postal].apply(first_digits) == arrond]
 
+def cond_filtering_cadastre(df):
+    return cond(df,CODE_POSTAL_CADASTRE,ARRONDI)
 
 def duplica(df_paris):
     """duplica prend en entrée une partie de valeur fonciere, additionne les surface d'un même lot et supprime les lignes non nécessaires de ce lot afin d'avoir une unique ligne par adresse"""

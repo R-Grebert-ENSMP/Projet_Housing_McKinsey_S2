@@ -63,10 +63,14 @@ valeursfoncieres-2018:
 adresses-cadastre-75 : 
 	type : pandas.CSVDataSet
 	filepath: "data/01_raw/Cadastre_75/adresses-cadastre-75.csv"
+	load_args:
+   	 	sep: ';'
 
 export-paris2014 : 
 	type : pandas.CSVDataSet
 	filepath: "data/01_raw/export-paris2014.csv"
+	load_args:
+   	 	sep: ','
 
 export-paris2015 : 
 	type : pandas.CSVDataSet
@@ -75,47 +79,63 @@ export-paris2015 :
 export-paris2016 : 
 	type : pandas.CSVDataSet
 	filepath: "data/01_raw/export-paris2016.csv"
+	load_args:
+   	 	sep: ','
 
 export-paris2017 : 
 	type : pandas.CSVDataSet
 	filepath: "data/01_raw/export-paris2017.csv"
+	load_args:
+   	 	sep: ','
 
 export-paris2018 : 
 	type : pandas.CSVDataSet
 	filepath: "data/01_raw/export-paris2018.csv"
+	load_args:
+   	 	sep: ','
 
 export-paris2019 : 
 	type : pandas.CSVDataSet
 	filepath: "data/01_raw/export-paris2019.csv"
+	load_args:
+   	 	sep: ','
 
 commercesparis : 
 	type : pandas.CSVDataSet
-	filepath: "data/01_raw/commercesparis.csv"
+	filepath: data/01_raw/commercesparis.csv
 
 EMPRISE_BATIE_PARIS : 
 	type : pandas.CSVDataSet
 	filepath: "data/01_raw/EMPRISE_BATIE_PARIS.csv"
+	load_args:
+   	 	sep: ';'
 
 emprise-batie-et-non-batie : 
 	type : pandas.CSVDataSet
-	filepath: "data/01_raw/emprise-batie-et-non-batie.csv"
+	filepath: data/01_raw/emprise-batie-et-non-batie.csv
 
 etablissements-scolaires : 
 	type : pandas.CSVDataSet
 	filepath: "data/01_raw/etablissements-scolaires.csv"
+	load_args:
+   	 	sep: ';'
 
 logements-sociaux-finances-a-paris : 
 	type : pandas.CSVDataSet
 	filepath: "data/01_raw/logements-sociaux-finances-a-paris.csv"
+	load_args:
+   	 	sep: ';'
 
 positions-geographiques-des-stations-du-reseau-ratp : 
 	type : pandas.CSVDataSet
 	filepath: "data/01_raw/positions-geographiques-des-stations-du-reseau-ratp.csv"
+	load_args:
+   	 	sep: ';'
 
 MOD_LOGEMT_2015 : 
 	type : pandas.TextDataSet
-	filepath: "data/01_raw/MOD_LOGEMT_2015.txt"
+	filepath: "data/01_raw/RP2015/MOD_LOGEMT_2015.txt"
 
 FD_LOGEMTZA_2015 : 
 	type : pandas.TextDataSet
-	filepath: "data/01_raw/FD_LOGEMTZA_2015.txt"
+	filepath: "data/01_raw/RP2015/FD_LOGEMTZA_2015.txt"

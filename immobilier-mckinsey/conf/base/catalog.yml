@@ -129,8 +129,9 @@ etablissements-scolaires :
  filepath: "data/01_raw/etablissements-scolaires.csv"
 	
 logements-sociaux-finances-a-paris : 
- type : pandas.CSVDataSet
- filepath: "data/01_raw/logements-sociaux-finances-a-paris.csv"
+  type : pandas.CSVDataSet
+  filepath: "data/01_raw/logements-sociaux-finances-a-paris.csv"
+
 
 positions-geographiques-des-stations-du-reseau-ratp : 
  type : pandas.CSVDataSet

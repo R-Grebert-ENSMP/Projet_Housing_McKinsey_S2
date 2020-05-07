@@ -127,12 +127,10 @@ emprise-batie-et-non-batie :
 etablissements-scolaires : 
  type : pandas.CSVDataSet
  filepath: "data/01_raw/etablissements-scolaires.csv"
-	
+
 logements-sociaux-finances-a-paris : 
   type : pandas.CSVDataSet
   filepath: "data/01_raw/logements-sociaux-finances-a-paris.csv"
-  load_args:
-    sep: ';'
 
 positions-geographiques-des-stations-du-reseau-ratp : 
  type : pandas.CSVDataSet

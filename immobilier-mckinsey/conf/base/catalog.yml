@@ -43,22 +43,32 @@
 valeursfoncieres-2014:
   type: pandas.TextDataSet
   filepath: data/01_raw/valeursfoncieres-2014.txt
+  load_args:
+    sep: '|'
 
 valeursfoncieres-2015:
   type: pandas.TextDataSet
   filepath: data/01_raw/valeursfoncieres-2015.txt
+  load_args:
+    sep: '|'
 
 valeursfoncieres-2016:
   type: pandas.TextDataSet
   filepath: data/01_raw/valeursfoncieres-2016.txt
+  load_args:
+    sep: '|'
 
 valeursfoncieres-2017:
   type: pandas.TextDataSet
   filepath: data/01_raw/valeursfoncieres-2017.txt
+  load_args:
+    sep: '|'
 
 valeursfoncieres-2018:
   type: pandas.TextDataSet
   filepath: data/01_raw/valeursfoncieres-2018.txt
+  load_args:
+    sep: '|'
 
 adresses-cadastre-75 : 
  type : pandas.CSVDataSet
@@ -67,75 +77,73 @@ adresses-cadastre-75 :
   sep: ';'
 
 export-paris2014 : 
-	type : pandas.CSVDataSet
-	filepath: "data/01_raw/export-paris2014.csv"
-	load_args:
-   	 	sep: ','
+ type : pandas.CSVDataSet
+ filepath: "data/01_raw/export-paris2014.csv"
+ load_args:
+   sep: ','
 
 export-paris2015 : 
-	type : pandas.CSVDataSet
-	filepath: "data/01_raw/export-paris2015.csv"
+ type : pandas.CSVDataSet
+ filepath: "data/01_raw/export-paris2015.csv"
+ load_args:
+   sep: ','
 
 export-paris2016 : 
-	type : pandas.CSVDataSet
-	filepath: "data/01_raw/export-paris2016.csv"
-	load_args:
-   	 	sep: ','
+ type : pandas.CSVDataSet
+ filepath: "data/01_raw/export-paris2016.csv"
+ load_args:
+   sep: ','
 
 export-paris2017 : 
-	type : pandas.CSVDataSet
-	filepath: "data/01_raw/export-paris2017.csv"
-	load_args:
-   	 	sep: ','
+ type : pandas.CSVDataSet
+ filepath: "data/01_raw/export-paris2017.csv"
+ load_args:
+   sep: ','
 
 export-paris2018 : 
-	type : pandas.CSVDataSet
-	filepath: "data/01_raw/export-paris2018.csv"
-	load_args:
-   	 	sep: ','
+ type : pandas.CSVDataSet
+ filepath: "data/01_raw/export-paris2018.csv"
+ load_args:
+   sep: ','
 
 export-paris2019 : 
-	type : pandas.CSVDataSet
-	filepath: "data/01_raw/export-paris2019.csv"
-	load_args:
-   	 	sep: ','
+ type : pandas.CSVDataSet
+ filepath: "data/01_raw/export-paris2019.csv"
+ load_args:
+   sep: ','
 
 commercesparis : 
-	type : pandas.CSVDataSet
-	filepath: data/01_raw/commercesparis.csv
+ type : pandas.CSVDataSet
+ filepath: "data/01_raw/commercesparis.csv"
 
 EMPRISE_BATIE_PARIS : 
-	type : pandas.CSVDataSet
-	filepath: "data/01_raw/EMPRISE_BATIE_PARIS.csv"
-	load_args:
-   	 	sep: ';'
+ type : pandas.CSVDataSet
+ filepath: "data/01_raw/EMPRISE_BATIE_PARIS.csv"
 
 emprise-batie-et-non-batie : 
-	type : pandas.CSVDataSet
-	filepath: data/01_raw/emprise-batie-et-non-batie.csv
+ type : pandas.CSVDataSet
+ filepath: "data/01_raw/emprise-batie-et-non-batie.csv"
 
 etablissements-scolaires : 
-	type : pandas.CSVDataSet
-	filepath: "data/01_raw/etablissements-scolaires.csv"
-	load_args:
-   	 	sep: ';'
-
+ type : pandas.CSVDataSet
+ filepath: "data/01_raw/etablissements-scolaires.csv"
+	
 logements-sociaux-finances-a-paris : 
-	type : pandas.CSVDataSet
-	filepath: "data/01_raw/logements-sociaux-finances-a-paris.csv"
-	load_args:
-   	 	sep: ';'
+ type : pandas.CSVDataSet
+ filepath: "data/01_raw/logements-sociaux-finances-a-paris.csv"
 
 positions-geographiques-des-stations-du-reseau-ratp : 
-	type : pandas.CSVDataSet
-	filepath: "data/01_raw/positions-geographiques-des-stations-du-reseau-ratp.csv"
-	load_args:
-   	 	sep: ';'
+ type : pandas.CSVDataSet
+ filepath: "data/01_raw/positions-geographiques-des-stations-du-reseau-ratp.csv"
 
 MOD_LOGEMT_2015 : 
-	type : pandas.TextDataSet
-	filepath: "data/01_raw/RP2015/MOD_LOGEMT_2015.txt"
+ type : pandas.TextDataSet
+ filepath: "data/01_raw/RP2015/MOD_LOGEMT_2015.txt"
+  load_args:
+    sep: ';'
 
 FD_LOGEMTZA_2015 : 
-	type : pandas.TextDataSet
-	filepath: "data/01_raw/RP2015/FD_LOGEMTZA_2015.txt"
+ type : pandas.TextDataSet
+ filepath: "data/01_raw/RP2015/FD_LOGEMTZA_2015.txt"
+  load_args:
+    sep: ';'

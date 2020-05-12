@@ -1,7 +1,7 @@
 
 
 
-parameters ={
+parameters = {
 # Column Names
 # Valeurs Foncieres table
 "vf_street_type" : "Type de voie",

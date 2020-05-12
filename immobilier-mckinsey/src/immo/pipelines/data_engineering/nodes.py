@@ -2,22 +2,9 @@
 import jellyfish
 import pandas as pd
 from pandas.testing import assert_frame_equal
-from global_variables import (
+from immo.pipelines.data_engineering.global_variables import parameters
     # Since normalization rules have to be applied to multiple dataframes, you better make them global
-    norm_street_types,
-    norm_accents,
-    norm_abbrevations,
-    stop_words,
     # Careful with column names, they can make you spend hours debugging
-    vf_street_type,
-    vf_price_nominal,
-    vf_built_area,
-    vf_square_meter_price,
-    cad_street_full,
-    cad_street_type,
-    cad_street_name,
-)
-
 import json
 import numpy as np
 import math
@@ -111,16 +98,17 @@ def compare(
 # ------------------- Merger -------------------#
 def merger(clean_cadastre, clean_valeur_fonc, columns_merger, columns_cadastre_compare, columns_vf_compare):
 
-'''
-This fucntion is the final step, it takes the clean table of  cadastre as the scafold, it also needs the name of the columns that need to be compared in both and the list of columns that we want to add to the scafold from valeur fonciere. Then it compares the data and everytime it gets a match, the data from valeur fonciere is added to the scafold.
-Args:
-    clean_cadastre (pandas dataframe): the cleaned table of cadastre
-    clean_valeur_fonciere (pandas dataframe): the cleaned table of valeur fonciere
-    columns_merger (list): list of columns to add to the clean cadastre
-    columns_compare (list): list of columns to compare between the two sets
-Returns:
-    master_table_f (pandas dataframe): the final master table with both sets merged
-'''
+
+    '''
+    This fucntion is the final step, it takes the clean table of  cadastre as the scafold, it also needs the name of the columns that need to be compared in both and the list of columns that we want to add to the scafold from valeur fonciere. Then it compares the data and everytime it gets a match, the data from valeur fonciere is added to the scafold.
+    Args:
+        clean_cadastre (pandas dataframe): the cleaned table of cadastre
+        clean_valeur_fonciere (pandas dataframe): the cleaned table of valeur fonciere
+        columns_merger (list): list of columns to add to the clean cadastre
+        columns_compare (list): list of columns to compare between the two sets
+    Returns:
+        master_table_f (pandas dataframe): the final master table with both sets merged
+    '''
 
 
     master_table = clean_cadastre.copy() #Copying of cadastre

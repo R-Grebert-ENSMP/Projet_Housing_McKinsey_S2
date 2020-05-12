@@ -1,49 +1,69 @@
 from kedro.pipeline import node, Pipeline
 from immo.pipelines.data_engineering.nodes import (
     sep_voies,
-    cond,
-    duplica,
-    corr_type_de_voie,
+    mask_duplica_vf,
+    cond_filtering_cadastre,
+    normalisation,
+    first_digits,
+    get_square_meter_price,
+    corr_type_de_voie_vf,
 )
+from immo.pipelines.data_engineering.nodes.global_variables
 
-CODE_POSTAL_CADASTRE = 'code_postal'
-CODE_POSTAL_VF = 'code_postal'
-ARRONDI=750
 
 def pipeline_merge_arrond_2014( **kwargs):
     return Pipeline (
-    [   
+    [
         node(func = sep_voies,
             inputs = ['adresses-cadastre-75'],
-            outputs = 'cadastre_trié',
-            name = 'cadastre_trié',
+            outputs = 'cadastre_trie',
+            name = 'cadastre_trie'
         ),
-        
-        node(func = cond,
-            inputs = ['cadastre_trié', 'CODE_POSTAL_CADASTRE', 'ARRONDI'],
+
+        node(func = cond_filtering_cadastre,
+           inputs = 'cadastre_trie',
             outputs = 'cadastre_i',
-            name = 'cadastre_i',
+            name = 'cadastre_i'
         ),
-        
-        node(func = cond,
-            inputs = ['valeursfonciere-2014', 'CODE_POSTAL_VF','ARRONDI'],
-            outputs = 'master_2014i1_nt',#nt pour non triée
-            name = 'vf_2014_i_nt',
+
+        node(func = normalisation,
+           inputs = 'cadastre_i',
+            outputs = 'cadastre_i_normed',
+            name = 'cadastre_i_normed'
         ),
+
+        node(func = mask_duplica_vf,
+           inputs = 'valeursfoncieres-2014',
+            outputs = 'vf_paris',
+            name = 'vf_paris'
+        ),
+
+        node(func = get_square_meter_price,
+           inputs = 'vf_paris',
+            outputs = 'vf_paris_sqm',
+            name = 'vf_paris_sqm'
+        ),
+
+        node(func = corr_type_de_voie_vf,
+           inputs = 'vf_paris_sqm',
+            outputs = 'vf_paris_corr',
+            name = 'vf_paris_corr'
+        ),
+
+
         ]
     )
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+
+
+
+
+
+
+
+
+
+
+
+
+
+

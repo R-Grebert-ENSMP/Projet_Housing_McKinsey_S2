@@ -7,6 +7,7 @@ Basically, this script gathers the functions from the following scripts :
     - separateur_cadastre.py
 """
 import jellyfish
+import numpy as np
 import pandas as pd
 from pandas.testing import assert_frame_equal
 from Desktop.global_variables import (
@@ -307,9 +308,4 @@ if __name__ == "__main__":
             vf_price_nominal: [100000, np.NaN, 950000],
         }
     )
-    print(
-        "Merger test :",
-        assert_frame_equal(
-            merger(df_cadastre, df_valeur_fonciere, [vf_built_area, vf_price_nominal], [cad_street_num, cad_street_type, cad_street_name], [vf_street_num, vf_street_type, vf_street_name] ), excpected_master_table_f
-        ),
-    )
+    

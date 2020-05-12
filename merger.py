@@ -26,7 +26,7 @@ def merger(clean_cadastre, clean_valeur_fonc, columns_merger, columns_cadastre_c
     master_table = clean_cadastre.copy() #Copying of cadastre
     long_columns_merger = len(columns_merger)
     for i in columns_merger:
-        master_table[i] = np.NaN
+        master_table[i] = None
         
     M1 = np.array(clean_cadastre)
     M2 = np.array(clean_valeur_fonc) # Passing to numpy

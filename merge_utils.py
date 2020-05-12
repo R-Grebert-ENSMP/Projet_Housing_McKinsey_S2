@@ -242,3 +242,55 @@ if __name__ == "__main__":
             get_square_meter_price(df_valeur_fonciere), expected_df_price
         ),
     )
+    # Testing the merge function
+    df_cadastre = pd.DataFrame(
+        data={
+            cad_street_num: [4, 2, 11], 
+            cad_street_type: ['rue', 'Boulevard', 'rue'], 
+            cad_street_name: ['Vaugeirard', 'Maréchal Foche', 'Cournet'], 
+            'Année': [1880, 1924, 1911],
+        }
+    )
+    df_valeur_fonciere = pd.DataFrame(
+        data={
+            vf_street_num: [4 ,3, 11],  
+            vf_street_type: ['rue', 'Avenue', 'rue'], 
+            vf_street_name: ['vaugeirard', 'Maréchal Foche', 'Cournet'], 
+            vf_built_area: [100, 45, 76],
+            vf_price_nominal: [1000000, 550000, 950000],
+        }
+    )
+    excpected_master_table_f = pd.DataFrame(
+        data={
+            cad_street_num: [4, 2, 11], 
+            cad_street_type: ['rue', 'Boulevard', 'rue'], 
+            cad_street_name: ['Vaugeirard', 'Maréchal Foche', 'Cournet'], 
+            'Année': [1880, 1924, 1911],
+            vf_built_area: [100, np.NaN, 76],
+            vf_price_nominal: [100000, np.NaN, 950000],
+        }
+    )
+    merger_output = merger(
+        df_cadastre,
+        df_valeur_fonciere,
+        [vf_built_area, vf_price_nominal],
+        [cad_street_num, cad_street_type, cad_street_name],
+        [vf_street_num, vf_street_type, vf_street_name],
+    )
+    #print(merger_output.dtypes)
+    #print(excpected_master_table_f.dtypes)
+    int_cols = [cad_street_num, "Année"]
+    float_cols = [vf_built_area, vf_price_nominal]
+    for col in int_cols:
+        merger_output[col] = merger_output[col].apply(int)
+        excpected_master_table_f[col] = excpected_master_table_f[col].apply(int)
+    for col in float_cols:
+        merger_output[col] = merger_output[col].apply(float)
+        excpected_master_table_f[col] = excpected_master_table_f[col].apply(float)
+    print(
+        "Merger test :",
+        assert_frame_equal(
+            merger_output,
+            excpected_master_table_f,
+        ),
+    )

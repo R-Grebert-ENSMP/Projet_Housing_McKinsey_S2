@@ -8,7 +8,7 @@ from immo.pipelines.data_engineering.nodes import (
     get_square_meter_price,
     corr_type_de_voie_vf,
 )
-from immo.pipelines.data_engineering.nodes.global_variables
+from immo.pipelines.data_engineering.global_variables import parameters
 
 
 def pipeline_merge_arrond_2014( **kwargs):

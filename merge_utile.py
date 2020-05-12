@@ -159,6 +159,20 @@ def get_square_meter_price(valeur_fonc_df):
     return valeur_fonc_df
 
 # ------------------- Merger -------------------#
+'''
+This fucntion is the final step, it takes the clean table of  cadastre as the scafold, it also needs the name of the columns that need to be compared in both and the list of columns that we want to add to the scafold from valeur fonciere. Then it compares the data and everytime it gets a match, the data from valeur fonciere is added to the scafold.
+
+Args:
+    clean_cadastre (pandas dataframe): the cleaned table of cadastre
+    clean_valeur_fonciere (pandas dataframe): the cleaned table of valeur fonciere
+    columns_merger (list): list of columns to add to the clean cadastre 
+    columns_cadastre_compare (list): list of columns in cadastre to compare with valeur fonciere
+    columns_vf_compare (list): list of columns in valeur fonciere to compare with cadastre
+
+Returns:
+    master_table_f (pandas dataframe): the final master table with both sets merged
+
+'''
 def merger(clean_cadastre, clean_valeur_fonc, columns_merger, columns_cadastre_compare, columns_vf_compare):
     master_table = clean_cadastre.copy() #Copying of cadastre
     long_columns_merger = len(columns_merger)

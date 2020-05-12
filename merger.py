@@ -15,7 +15,8 @@ Args:
     clean_cadastre (pandas dataframe): the cleaned table of cadastre
     clean_valeur_fonciere (pandas dataframe): the cleaned table of valeur fonciere
     columns_merger (list): list of columns to add to the clean cadastre 
-    columns_compare (list): list of columns to compare between the two sets
+    columns_cadastre_compare (list): list of columns in cadastre to compare with valeur fonciere
+    columns_vf_compare (list): list of columns in valeur fonciere to compare with cadastre
 
 Returns:
     master_table_f (pandas dataframe): the final master table with both sets merged

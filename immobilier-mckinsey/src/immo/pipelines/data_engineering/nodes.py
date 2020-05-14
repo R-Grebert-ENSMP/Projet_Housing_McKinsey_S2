@@ -98,7 +98,7 @@ def compare(
 # ------------------- Merger -------------------#
 
 def merger(clean_cadastre, clean_valeur_fonc, columns_merger = ["No voie","Type de voie","Voie", parameters["vf_price_nominal"], parameters["vf_built_area" ],
-parameters["vf_square_meter_price"]], columns_cadastre_compare = ["voie_code",parameters["cad_street_type"],parameters["cad_street_name"]], columns_vf_compare = ["No voie","Type de voie","Voie"]):
+parameters["vf_square_meter_price"]], columns_cadastre_compare = [parameters["cad_street_num"],parameters["cad_street_type"],parameters["cad_street_name"]], columns_vf_compare = [parameters["vf_street_num"],parameters["vf_street_type"],parameters["vf_street_name"]]):
 
 
     '''

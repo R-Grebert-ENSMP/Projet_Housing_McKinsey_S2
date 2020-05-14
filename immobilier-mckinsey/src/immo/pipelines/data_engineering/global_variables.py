@@ -11,7 +11,7 @@ parameters = {
 "vf_built_area" : "Surface reelle bati",
 "vf_square_meter_price" : "prix_m2",
 # Cadastre table
-"cad_street_num" : "voie_code"
+"cad_street_num" : "numero"
 "cad_street_full" : "voie_nom",
 "cad_street_type" : "Type de voie",
 "cad_street_name" : "Nom de voie",

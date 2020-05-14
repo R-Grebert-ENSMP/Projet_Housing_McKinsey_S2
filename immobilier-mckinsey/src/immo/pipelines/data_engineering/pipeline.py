@@ -20,14 +20,9 @@ def pipeline_merge_arrond_2014( **kwargs):
             name = 'cadastre_trie'
         ),
 
-        node(func = cond_filtering_cadastre,
-           inputs = 'cadastre_trie',
-            outputs = 'cadastre_i',
-            name = 'cadastre_i'
-        ),
 
         node(func = normalisation,
-           inputs = 'cadastre_i',
+           inputs = 'cadastre_trie',
             outputs = 'cadastre_i_normed',
             name = 'cadastre_i_normed'
         ),

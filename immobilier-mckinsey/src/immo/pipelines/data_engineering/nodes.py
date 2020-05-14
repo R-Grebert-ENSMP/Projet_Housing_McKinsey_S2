@@ -96,7 +96,9 @@ def compare(
         return False
 
 # ------------------- Merger -------------------#
-def merger(clean_cadastre, clean_valeur_fonc, columns_merger, columns_cadastre_compare, columns_vf_compare):
+
+def merger(clean_cadastre, clean_valeur_fonc, columns_merger = ["No voie","Type de voie","Voie", parameters["vf_price_nominal"], parameters["vf_built_area" ],
+parameters["vf_square_meter_price"]], columns_cadastre_compare = ["voie_code",parameters["cad_street_type"],parameters["cad_street_name"]], columns_vf_compare = ["No voie","Type de voie","Voie"]):
 
 
     '''
@@ -251,27 +253,26 @@ def get_square_meter_price(valeur_fonc_df):
 
 #------------------------------------------------------------- not cleaned
 
+##Nous avons finalement décidé de ne pas découper cadastre_75 en arrondissement
 
-
-
-#----functions and parameters for cond_filtering_cadastre
-def first_digits(number):
-    if str(number)[:2]!='na':
-        return int(str(number)[:2])
-    else:
-        return 0
-
-CODE_POSTAL_CADASTRE = 'code_postal'
-CODE_POSTAL_VF = 'code_postal'
-ARROND=750
-
-def cond_filtering_cadastre(cadastre_df, code_postal = CODE_POSTAL_CADASTRE , arrond = ARROND):
-    """
-    Selects the part of the "cadastre_df" corresponding to the appropriate postal code
-
-    """
-    return cadastre_df[cadastre_df[code_postal].apply(first_digits) == arrond]
-#-------
+# #----functions and parameters for cond_filtering_cadastre
+# def first_digits(number):
+#     if str(number)[:2]!='na':
+#         return int(str(number)[:2])
+#     else:
+#         return 0
+#
+# CODE_POSTAL_CADASTRE = 'code_postal'
+# CODE_POSTAL_VF = 'code_postal'
+# ARROND=750
+#
+# def cond_filtering_cadastre(cadastre_df, code_postal = CODE_POSTAL_CADASTRE , arrond = ARROND):
+#     """
+#     Selects the part of the "cadastre_df" corresponding to the appropriate postal code
+#
+#     """
+#     return cadastre_df[cadastre_df[code_postal].apply(first_digits) == arrond]
+# #-------
 
 
 

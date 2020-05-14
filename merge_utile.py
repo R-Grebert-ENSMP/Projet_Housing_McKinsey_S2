@@ -120,10 +120,10 @@ def sep_voies(cadastre_df):
     """
     # The pd.DataFrame.apply() method is the best to apply any type of function
     # It prevents from looping on pd df, which is very costly
-    cadastre_df[cad_street_type] = cadastre_df[cad_street_full].apply(
+    cadastre_df[parameters["cad_street_type"]] = cadastre_df[parameters["cad_street_full"]].apply(
         lambda x: x.split(" ")[0]
     )
-    cadastre_df[cad_street_name] = cadastre_df[cad_street_full].apply(
+    cadastre_df[parameters["cad_street_name"]] = cadastre_df[parameters["cad_street_full"]].apply(
         lambda x: " ".join(x.split(" ")[1:])
     )
     return cadastre_df.drop(cad_street_full, axis=1)

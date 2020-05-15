@@ -1,55 +1,49 @@
 from kedro.pipeline import node, Pipeline
 from immo.pipelines.data_engineering.nodes import (
+    sep_voies,
+    mask_duplica_vf,
     merger,
-    selection,
-    drop_duplica,
-    geo,
+    normalisation,
+    get_square_meter_price,
+    corr_type_de_voie_vf,
 )
+from immo.pipelines.data_engineering.global_variables import parameters
 
 
-def pipeline_merge_arrond_2014(i, **kwargs):
+def pipeline_merge_arrond_2014( **kwargs):
     return Pipeline (
-    [   
+    [
         node(func = sep_voies,
             inputs = ['adresses-cadastre-75'],
-            outputs = 'cadastre_trié',
-            name = 'cadastre_trié',
+            outputs = 'cadastre_trie',
+            name = 'cadastre_trie'
         ),
-        
-        node(func = cond,
-            inputs = ['cadastre_trié', 'code_postal', 750i],
-            outputs = 'cadastre_i',
-            name = 'cadastre_i',
+
+        node(func = normalisation,
+            inputs = 'cadastre_trie',
+            outputs = 'cadastre_normed',
+            name = 'cadastre_normed'
         ),
-        
-        node(func = cond,
-            inputs = ['valeursfonciere-2014', 'Code postal', 750i],
-            outputs = 'master_2014i1_nt',#nt pour non triée
-            name = 'vf_2014_i_nt',
+
+        node(func = mask_duplica_vf,
+            inputs = 'valeursfoncieres-2014',
+            outputs = 'vf_paris_sqm',
+            name = 'vf_paris_sqm'
         ),
-        
-        node(func = duplica,
-            inputs = ['master_2014_i_nt'],
-            outputs = 'master_2014_i_nc', #nc pour on corrigé
-            name = 'vf_2014_i_nc',
-        ),
-        
-        node(func = corr_type_de_voie,
-            inputs = ['master_2014_i_nc'],
-            outputs = 'master_2014_i_n', 
-            name = 'vf_2014_i_n',
-        ),
-        
-        node(func = corr_type_de_voie,
-            inputs = ['master_2014_i_n'],
-            outputs = 'master_2014_i', 
-            name = 'vf_2014_i',
-        ),
-        
-        #On a cadastre du ième arrondissement avec les bonnes colonnes et valeurs foncières 2014 du ième arrondissement avec le nom des voies corrigées
-        
-    ]
+
+        node(func=normalisation,
+             inputs='vf_paris',
+             outputs='vf_paris_normed',
+             name='vf_paris_normed'
+             ),
+
+        node(func = merger,
+             inputs = ['cadastre_normed', 'vf_paris_normed'],
+             outputs = 'master_2014',
+             name = 'master_2014'),
+        ]
     )
+
     
     
     

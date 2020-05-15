@@ -1,0 +1,1236 @@
+Index: merge_utils.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>\"\"\"\r\nBasically, this script gathers the functions from the following scripts :\r\n    - compareadresse.py\r\n    - corr_type_voie_VF.py\r\n    - normalisation_et_stop_words.py\r\n    - rajout_prix_m2.py\r\n    - separateur_cadastre.py\r\n\"\"\"\r\nimport jellyfish\r\nimport pandas as pd\r\nfrom pandas.testing import assert_frame_equal\r\nfrom global_variables import (\r\n    # Since normalization rules have to be applied to multiple dataframes, you better make them global\r\n    norm_street_types,\r\n    norm_accents,\r\n    norm_abbrevations,\r\n    stop_words,\r\n    # Careful with column names, they can make you spend hours debugging\r\n    vf_street_type,\r\n    vf_price_nominal,\r\n    vf_built_area,\r\n    vf_square_meter_price,\r\n    cad_street_full,\r\n    cad_street_type,\r\n    cad_street_name,\r\n)\r\n\r\n\r\n# ------------------- Merging Functions ------------------- #\r\n\r\n\r\ndef normalisation(str_err):\r\n    \"\"\"\r\n    Function to normalize a string through four steps :\r\n    - replacing errors related to accents encoding\r\n    - lowercasing\r\n    - stop words removal\r\n    - normalizing common names (place, general, ...) into abbreviations\r\n    Normalization rules are imported from global variables.py\r\n\r\n    Args:\r\n        str_err (string): the string to normalize\r\n\r\n    Returns:\r\n        string: the normalized string\r\n    \"\"\"\r\n    # Replace accents related errors\r\n    str_accents = str_err\r\n    for encod_err, encod_corr in norm_accents.items():\r\n        str_accents = str_accents.replace(encod_err, encod_corr)\r\n    # Lowercase the string\r\n    str_lower = str_accents.lower()\r\n    # Remove stop_words\r\n    str_stopwords = \" \".join(\r\n        [\r\n            word\r\n            for word in str_lower.split(\" \")\r\n            if (word not in stop_words) and (len(word) > 0)\r\n        ]\r\n    )\r\n    # Abbreviate common names\r\n    str_abbreviate = str_stopwords\r\n    for long_name, abbr_name in norm_abbrevations.items():\r\n        str_abbreviate = str_abbreviate.replace(long_name, abbr_name)\r\n    return str_abbreviate\r\n\r\n\r\ndef compare(\r\n    ref_address_number,\r\n    ref_address_type,\r\n    ref_address_street,\r\n    comp_address_number,\r\n    comp_address_type,\r\n    comp_address_street,\r\n    distance_threshold=0.9,\r\n):\r\n    \"\"\"\r\n    Computes the Jaro Distance (https://rosettacode.org/wiki/Jaro_distance) on two normalized strings.\r\n    The normalization process is developed in the normalisation function.\r\n    Requires jellyfish version xx.yy.\r\n\r\n    Args:\r\n        ref_address_number (string): the number of the address to compare with\r\n        ref_address_type (string): the type of the address to compare with\r\n        ref_address_street (string): the street of the address to compare with\r\n        comp_address_number (string): the number of the address to be compared\r\n        comp_address_type (string): the type of the address to be compared\r\n        comp_address_street (string): the street of the address to be compared\r\n        distance_threshold (float): the [0, 1] threshold on the Jaro distance that returns the boolean\r\n\r\n    Returns:\r\n        boolean: did the Jaro distance match the ref address and comp address ?\r\n    \"\"\"\r\n    # If the type and number of the addresses are the same,\r\n    match_condition = ref_address_number == comp_address_number\r\n    match_condition &= ref_address_type == comp_address_type\r\n    # and the distance is upper than the threshold (0: no similarity, 1: perfect match),\r\n    ref_norm = normalisation(\" \" + ref_address_street)\r\n    comp_norm = normalisation(\" \" + comp_address_street)\r\n    match_condition &= jellyfish.jaro_distance(ref_norm, comp_norm) > distance_threshold\r\n    # then the addresses are the same\r\n    if match_condition:\r\n        return True\r\n    else:\r\n        return False\r\n\r\n\r\n# ------------------- Cleaning Functions ------------------- #\r\n\r\n\r\ndef sep_voies(cadastre_df):\r\n    \"\"\"\r\n    Splits the cad_street_full column in the cadastre into cad_street_type and cad_street name,\r\n    to match the format in the \"valeurs foncieres\" table.\r\n\r\n    Args:\r\n        cadastre_df (pandas dataframe): the cadastre table\r\n\r\n    Returns:\r\n        pandas dataframe: the cadastre table, with the cad_street_full column,\r\n        splitted into the cad_street_type and cad_street_name columns.\r\n    \"\"\"\r\n    # The pd.DataFrame.apply() method is the best to apply any type of function\r\n    # It prevents from looping on pd df, which is very costly\r\n    cadastre_df[cad_street_type] = cadastre_df[cad_street_full].apply(\r\n        lambda x: x.split(\" \")[0]\r\n    )\r\n    cadastre_df[cad_street_name] = cadastre_df[cad_street_full].apply(\r\n        lambda x: \" \".join(x.split(\" \")[1:])\r\n    )\r\n    return cadastre_df.drop(cad_street_full, axis=1)\r\n\r\n\r\ndef corr_type_de_voie(valeur_fonc_df):\r\n    \"\"\"\r\n    Corrects the vf_street_type column in the \"valeur foncière\" table, for future comparison with the \"cadastre table\".\r\n    Corrections are made according to the norm_street_types dictionary in defined in global variables.\r\n\r\n    Args:\r\n        valeur_fonc_df (pandas dataframe): a dataframe with a street_type column to be standardized to the values in cadastre\r\n\r\n    Returns:\r\n        pandas dataframe: the same dataframe, with standardized values in the street_type column\r\n    \"\"\"\r\n    valeur_fonc_df[vf_street_type] = valeur_fonc_df[vf_street_type].apply(\r\n        lambda x: norm_street_types[x] if x in norm_street_types.keys() else x\r\n    )\r\n    return valeur_fonc_df\r\n\r\n\r\ndef get_square_meter_price(valeur_fonc_df):\r\n    \"\"\"\r\n    Corrects the vf_square_meter_price column in the \"valeur foncière\" table, as vf_price_nominal divided by vf_built_area.\r\n\r\n    Args:\r\n        valeur_fonc_df (pandas dataframe): a dataframe with vf_price_nominal and vf_built_area columns.\r\n\r\n    Returns:\r\n        pandas dataframe: the same dataframe, with the new vf_square_meter_price column.\r\n    \"\"\"\r\n    valeur_fonc_df[vf_square_meter_price] = (\r\n        valeur_fonc_df[vf_price_nominal] / valeur_fonc_df[vf_built_area]\r\n    ).round()\r\n    # TO DO : catch the surface == 0 exception\r\n    return valeur_fonc_df\r\n\r\n\r\n# ------------------- TESTS ------------------- #\r\n\r\n\r\nif __name__ == \"__main__\":\r\n    # The latter will only run if the script called is this one (and not if the functions are reused elsewhere).\r\n\r\n    # Testing normalization function\r\n    string_to_norm = \"Avenue du GÃ©nÃ©ral Leclerc\"\r\n    expected_string_norm = \"av gen leclerc\"\r\n    print(\r\n        \"Normalisation Function test :\",\r\n        normalisation(string_to_norm) == expected_string_norm,\r\n    )\r\n\r\n    # Testing compare function\r\n    ref_to_compare = \"du GÃ©nÃ©ral Leclerc\"\r\n    comp_to_compare = \"du GÃ©nÃ©ral Leclere\"\r\n    expected_compare = True\r\n    print(\r\n        \"Compare Function test :\",\r\n        compare(12, \"avenue\", ref_to_compare, 12, \"avenue\", comp_to_compare)\r\n        == expected_compare,\r\n    )\r\n\r\n    # Testing the cadastre df functions\r\n    cadastre_df = pd.DataFrame(\r\n        data={\r\n            cad_street_full: [\"Rue du Foin\", \"Avenue du Puit\", \"Boulevard de la Table\"]\r\n        }\r\n    )\r\n    expected_sep_street = pd.DataFrame(\r\n        data={\r\n            cad_street_type: [\"Rue\", \"Avenue\", \"Boulevard\"],\r\n            cad_street_name: [\"du Foin\", \"du Puit\", \"de la Table\"],\r\n        }\r\n    )\r\n    # Testing the valeur foncieres df functions\r\n    df_valeur_fonciere = pd.DataFrame(\r\n        data={\r\n            vf_price_nominal: [100000, 500000, 450000, 375000],\r\n            \"Numero de voie\": [0, 1, 14, 32],\r\n            vf_street_type: [\"Rue\", \"CHEM\", \"Rue\", \"BD\"],\r\n            vf_built_area: [10, 45, 30, 25],\r\n        }\r\n    )\r\n    expected_df_norm = pd.DataFrame(\r\n        data={\r\n            vf_price_nominal: [100000, 500000, 450000, 375000],\r\n            \"Numero de voie\": [0, 1, 14, 32],\r\n            vf_street_type: [\"Rue\", \"Chemin\", \"Rue\", \"Boulevard\"],\r\n            vf_built_area: [10, 45, 30, 25],\r\n        }\r\n    )\r\n    expected_df_price = pd.DataFrame(\r\n        data={\r\n            vf_price_nominal: [100000, 500000, 450000, 375000],\r\n            \"Numero de voie\": [0, 1, 14, 32],\r\n            vf_street_type: [\"Rue\", \"Chemin\", \"Rue\", \"Boulevard\"],\r\n            vf_built_area: [10, 45, 30, 25],\r\n            vf_square_meter_price: [10000.0, 11111.0, 15000.0, 15000.0],\r\n        }\r\n    )\r\n    # The assert_frame_equal function gives the discrepancies between two dataframes\r\n    print(\r\n        \"Cadastre Street Type Separation :\",\r\n        assert_frame_equal(sep_voies(cadastre_df), expected_sep_street),\r\n    )\r\n    print(\r\n        \"Valeurs Foncieres Street Type Function test :\",\r\n        assert_frame_equal(corr_type_de_voie(df_valeur_fonciere), expected_df_norm),\r\n    )\r\n    print(\r\n        \"Valeurs Foncieres Square Meter price Function test :\",\r\n        assert_frame_equal(\r\n            get_square_meter_price(df_valeur_fonciere), expected_df_price\r\n        ),\r\n    )\r\n    # Testing the merge function\r\n    df_cadastre = pd.DataFrame(\r\n        data={\r\n            cad_street_num: [4, 2, 11], \r\n            cad_street_type: ['rue', 'Boulevard', 'rue'], \r\n            cad_street_name: ['Vaugeirard', 'Maréchal Foche', 'Cournet'], \r\n            'Année': [1880, 1924, 1911],\r\n        }\r\n    )\r\n    df_valeur_fonciere = pd.DataFrame(\r\n        data={\r\n            vf_street_num: [4 ,3, 11],  \r\n            vf_street_type: ['rue', 'Avenue', 'rue'], \r\n            vf_street_name: ['vaugeirard', 'Maréchal Foche', 'Cournet'], \r\n            vf_built_area: [100, 45, 76],\r\n            vf_price_nominal: [1000000, 550000, 950000],\r\n        }\r\n    )\r\n    excpected_master_table_f = pd.DataFrame(\r\n        data={\r\n            cad_street_num: [4, 2, 11], \r\n            cad_street_type: ['rue', 'Boulevard', 'rue'], \r\n            cad_street_name: ['Vaugeirard', 'Maréchal Foche', 'Cournet'], \r\n            'Année': [1880, 1924, 1911],\r\n            vf_built_area: [100, np.NaN, 76],\r\n            vf_price_nominal: [100000, np.NaN, 950000],\r\n        }\r\n    )\r\n    merger_output = merger(\r\n        df_cadastre,\r\n        df_valeur_fonciere,\r\n        [vf_built_area, vf_price_nominal],\r\n        [cad_street_num, cad_street_type, cad_street_name],\r\n        [vf_street_num, vf_street_type, vf_street_name],\r\n    )\r\n    #print(merger_output.dtypes)\r\n    #print(excpected_master_table_f.dtypes)\r\n    int_cols = [cad_street_num, \"Année\"]\r\n    float_cols = [vf_built_area, vf_price_nominal]\r\n    for col in int_cols:\r\n        merger_output[col] = merger_output[col].apply(int)\r\n        excpected_master_table_f[col] = excpected_master_table_f[col].apply(int)\r\n    for col in float_cols:\r\n        merger_output[col] = merger_output[col].apply(float)\r\n        excpected_master_table_f[col] = excpected_master_table_f[col].apply(float)\r\n    print(\r\n        \"Merger test :\",\r\n        assert_frame_equal(\r\n            merger_output,\r\n            excpected_master_table_f,\r\n        ),\r\n    )\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- merge_utils.py	(revision 9e5ff9e04c6fb723e76f970a6c302dc10594417a)
++++ merge_utils.py	(date 1589534384722)
+@@ -7,9 +7,10 @@
+     - separateur_cadastre.py
+ """
+ import jellyfish
++import numpy as np
+ import pandas as pd
+ from pandas.testing import assert_frame_equal
+-from global_variables import (
++from Desktop.global_variables import (
+     # Since normalization rules have to be applied to multiple dataframes, you better make them global
+     norm_street_types,
+     norm_accents,
+@@ -20,6 +21,9 @@
+     vf_price_nominal,
+     vf_built_area,
+     vf_square_meter_price,
++    vf_street_name,
++    vf_street_num,
++    cad_street_num,
+     cad_street_full,
+     cad_street_type,
+     cad_street_name,
+@@ -37,10 +41,8 @@
+     - stop words removal
+     - normalizing common names (place, general, ...) into abbreviations
+     Normalization rules are imported from global variables.py
+-
+     Args:
+         str_err (string): the string to normalize
+-
+     Returns:
+         string: the normalized string
+     """
+@@ -78,7 +80,6 @@
+     Computes the Jaro Distance (https://rosettacode.org/wiki/Jaro_distance) on two normalized strings.
+     The normalization process is developed in the normalisation function.
+     Requires jellyfish version xx.yy.
+-
+     Args:
+         ref_address_number (string): the number of the address to compare with
+         ref_address_type (string): the type of the address to compare with
+@@ -87,7 +88,6 @@
+         comp_address_type (string): the type of the address to be compared
+         comp_address_street (string): the street of the address to be compared
+         distance_threshold (float): the [0, 1] threshold on the Jaro distance that returns the boolean
+-
+     Returns:
+         boolean: did the Jaro distance match the ref address and comp address ?
+     """
+@@ -112,20 +112,18 @@
+     """
+     Splits the cad_street_full column in the cadastre into cad_street_type and cad_street name,
+     to match the format in the "valeurs foncieres" table.
+-
+     Args:
+         cadastre_df (pandas dataframe): the cadastre table
+-
+     Returns:
+         pandas dataframe: the cadastre table, with the cad_street_full column,
+         splitted into the cad_street_type and cad_street_name columns.
+     """
+     # The pd.DataFrame.apply() method is the best to apply any type of function
+     # It prevents from looping on pd df, which is very costly
+-    cadastre_df[cad_street_type] = cadastre_df[cad_street_full].apply(
++    cadastre_df[parameters["cad_street_type"]] = cadastre_df[parameters["cad_street_full"]].apply(
+         lambda x: x.split(" ")[0]
+     )
+-    cadastre_df[cad_street_name] = cadastre_df[cad_street_full].apply(
++    cadastre_df[parameters["cad_street_name"]] = cadastre_df[parameters["cad_street_full"]].apply(
+         lambda x: " ".join(x.split(" ")[1:])
+     )
+     return cadastre_df.drop(cad_street_full, axis=1)
+@@ -135,10 +133,8 @@
+     """
+     Corrects the vf_street_type column in the "valeur foncière" table, for future comparison with the "cadastre table".
+     Corrections are made according to the norm_street_types dictionary in defined in global variables.
+-
+     Args:
+         valeur_fonc_df (pandas dataframe): a dataframe with a street_type column to be standardized to the values in cadastre
+-
+     Returns:
+         pandas dataframe: the same dataframe, with standardized values in the street_type column
+     """
+@@ -151,10 +147,8 @@
+ def get_square_meter_price(valeur_fonc_df):
+     """
+     Corrects the vf_square_meter_price column in the "valeur foncière" table, as vf_price_nominal divided by vf_built_area.
+-
+     Args:
+         valeur_fonc_df (pandas dataframe): a dataframe with vf_price_nominal and vf_built_area columns.
+-
+     Returns:
+         pandas dataframe: the same dataframe, with the new vf_square_meter_price column.
+     """
+@@ -164,6 +158,50 @@
+     # TO DO : catch the surface == 0 exception
+     return valeur_fonc_df
+ 
++# ------------------- Merger -------------------#
++def merger(clean_cadastre, clean_valeur_fonc, columns_merger, columns_cadastre_compare, columns_vf_compare):
++    master_table = clean_cadastre.copy() #Copying of cadastre
++    long_columns_merger = len(columns_merger)
++    for i in columns_merger:
++        master_table[i] = np.NaN
++
++    M1 = np.array(clean_cadastre)
++    M2 = np.array(clean_valeur_fonc) # Passing to numpy
++    R = np.array(master_table)
++    columns_clean_cadastre = list(clean_cadastre.columns)
++    columns_clean_valeur_fonc = list(clean_valeur_fonc.columns)
++    columns_master_table = list(master_table.columns)
++
++    indexem_columns_clean_valeur_fonc = [columns_clean_valeur_fonc.index(i) for i in columns_merger] # Indexes of the columns in valeur_fonciere to merge
++
++    indexem_columns_master_table = [columns_master_table.index(i) for i in columns_merger] # Indexes of the columns in master_table to merge
++
++    #Those list are necessary to work with numpy instead of pandas
++    indexec_columns_clean_cadastre = [columns_clean_cadastre.index(i) for i in columns_cadastre_compare] # Indexes of the columns in cadastre that we have to compare
++
++    indexec_columns_clean_valeur_fonc = [columns_clean_valeur_fonc.index(i) for i in columns_vf_compare] # Indexes of the columns in valeur_fonciere that we have to compare
++
++    a = len(M1[:,0])
++    b = len(M1[:,0])
++
++
++#Since we are basing our comparison on the number, street type and street, I created a tuple with those 3 infos in it, this tuple needs to be modified if we are to compare other informations between the two sets
++
++    for i in range (a):
++        (Num1, Type1, Voie1) = (M1[i, p] for p in indexec_columns_clean_cadastre)
++
++        for j in range (b):
++            (Num2, Type2, Voie2) = (M2[j, p] for p in indexec_columns_clean_cadastre)
++
++            if compare(Num1, Type1, Voie1, Num2, Type2, Voie2):
++
++                for k in range (long_columns_merger):
++                    R[i, indexem_columns_master_table[k]] = M2[j, indexem_columns_clean_valeur_fonc[k]]
++
++    master_table_f = pd.DataFrame(R)
++    master_table_f.columns = master_table.columns
++
++    return master_table_f
+ 
+ # ------------------- TESTS ------------------- #
+ 
+@@ -245,52 +283,28 @@
+     # Testing the merge function
+     df_cadastre = pd.DataFrame(
+         data={
+-            cad_street_num: [4, 2, 11], 
+-            cad_street_type: ['rue', 'Boulevard', 'rue'], 
+-            cad_street_name: ['Vaugeirard', 'Maréchal Foche', 'Cournet'], 
++            cad_street_num: [4, 2, 11],
++            cad_street_type: ['rue', 'Boulevard', 'rue'],
++            cad_street_name: ['Vaugeirard', 'Maréchal Foche', 'Cournet'],
+             'Année': [1880, 1924, 1911],
+         }
+     )
+     df_valeur_fonciere = pd.DataFrame(
+         data={
+-            vf_street_num: [4 ,3, 11],  
+-            vf_street_type: ['rue', 'Avenue', 'rue'], 
+-            vf_street_name: ['vaugeirard', 'Maréchal Foche', 'Cournet'], 
++            vf_street_num: [4 ,3, 11],
++            vf_street_type: ['rue', 'Avenue', 'rue'],
++            vf_street_name: ['vaugeirard', 'Maréchal Foche', 'Cournet'],
+             vf_built_area: [100, 45, 76],
+             vf_price_nominal: [1000000, 550000, 950000],
+         }
+     )
+     excpected_master_table_f = pd.DataFrame(
+         data={
+-            cad_street_num: [4, 2, 11], 
+-            cad_street_type: ['rue', 'Boulevard', 'rue'], 
+-            cad_street_name: ['Vaugeirard', 'Maréchal Foche', 'Cournet'], 
++            cad_street_num: [4, 2, 11],
++            cad_street_type: ['rue', 'Boulevard', 'rue'],
++            cad_street_name: ['Vaugeirard', 'Maréchal Foche', 'Cournet'],
+             'Année': [1880, 1924, 1911],
+             vf_built_area: [100, np.NaN, 76],
+             vf_price_nominal: [100000, np.NaN, 950000],
+         }
+     )
+-    merger_output = merger(
+-        df_cadastre,
+-        df_valeur_fonciere,
+-        [vf_built_area, vf_price_nominal],
+-        [cad_street_num, cad_street_type, cad_street_name],
+-        [vf_street_num, vf_street_type, vf_street_name],
+-    )
+-    #print(merger_output.dtypes)
+-    #print(excpected_master_table_f.dtypes)
+-    int_cols = [cad_street_num, "Année"]
+-    float_cols = [vf_built_area, vf_price_nominal]
+-    for col in int_cols:
+-        merger_output[col] = merger_output[col].apply(int)
+-        excpected_master_table_f[col] = excpected_master_table_f[col].apply(int)
+-    for col in float_cols:
+-        merger_output[col] = merger_output[col].apply(float)
+-        excpected_master_table_f[col] = excpected_master_table_f[col].apply(float)
+-    print(
+-        "Merger test :",
+-        assert_frame_equal(
+-            merger_output,
+-            excpected_master_table_f,
+-        ),
+-    )
+Index: immobilier-mckinsey/conf/base/catalog.yml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+># Here you can define all your data sets by using simple YAML syntax.\n#\n# Documentation for this file format can be found in \"The Data Catalog\"\n# Link: https://kedro.readthedocs.io/en/stable/04_user_guide/04_data_catalog.html\n#\n# We support interacting with a variety of data stores including local file systems, cloud, network and HDFS\n#\n# An example data set definition can look as follows:\n#\n#bikes:\n#  type: pandas.CSVDataSet\n#  filepath: \"data/01_raw/bikes.csv\"\n#\n#weather:\n#  type: spark.SparkDataSet\n#  filepath: s3a://your_bucket/data/01_raw/weather*\n#  file_format: csv\n#  credentials: dev_s3\n#  load_args:\n#    header: True\n#    inferSchema: True\n#  save_args:\n#    sep: '|'\n#    header: True\n#\n#scooters:\n#  type: pandas.SQLTableDataSet\n#  credentials: scooters_credentials\n#  table_name: scooters\n#  load_args:\n#    index_col: ['name']\n#    columns: ['name', 'gear']\n#  save_args:\n#    if_exists: 'replace'\n#    # if_exists: 'fail'\n#    # if_exists: 'append'\n#\n# The Data Catalog supports being able to reference the same file using two different DataSet implementations\n# (transcoding), templating and a way to reuse arguments that are frequently repeated. See more here:\n# https://kedro.readthedocs.io/en/stable/04_user_guide/04_data_catalog.html\n\ncadastre75:\n  type: pandas.CSVDataSet\n  filepath: \"data/01_raw/adresses-cadastre-75.csv\"\n  load_args:\n    index_col: ['cle_interop']\n    columns: ['cle_interop', 'code_postal']
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- immobilier-mckinsey/conf/base/catalog.yml	(revision 9e5ff9e04c6fb723e76f970a6c302dc10594417a)
++++ immobilier-mckinsey/conf/base/catalog.yml	(date 1589538087791)
+@@ -44,4 +44,112 @@
+   filepath: "data/01_raw/adresses-cadastre-75.csv"
+   load_args:
+     index_col: ['cle_interop']
+-    columns: ['cle_interop', 'code_postal']
+\ No newline at end of file
++    columns: ['cle_interop', 'code_postal']
++
++valeursfoncieres-2014:
++  type: pandas.TextDataSet
++  filepath: data/01_raw/valeursfoncieres-2014.txt
++  load_args:
++    sep: '|'
++
++valeursfoncieres-2015:
++  type: pandas.TextDataSet
++  filepath: "data/01_raw/valeursfoncieres-2015.txt"
++  load_args:
++    sep: '|'
++
++valeursfoncieres-2016:
++  type: pandas.TextDataSet
++  filepath: "data/01_raw/valeursfoncieres-2016.txt"
++  load_args:
++    sep: '|'
++
++valeursfoncieres-2017:
++  type: pandas.TextDataSet
++  filepath: "data/01_raw/valeursfoncieres-2017.txt"
++  load_args:
++    sep: '|'
++
++valeursfoncieres-2018:
++  type: pandas.TextDataSet
++  filepath: "data/01_raw/valeursfoncieres-2018.txt"
++  load_args:
++    sep: '|'
++
++adresses-cadastre-75 :
++ type : pandas.CSVDataSet
++ filepath: "data/01_raw/Cadastre_75/adresses-cadastre-75.csv"
++ load_args:
++  sep: ';'
++
++export-paris2014 :
++ type : pandas.CSVDataSet
++ filepath: "data/01_raw/export-paris2014.csv"
++ load_args:
++   sep: ','
++
++export-paris2015 :
++ type : pandas.CSVDataSet
++ filepath: "data/01_raw/export-paris2015.csv"
++ load_args:
++   sep: ','
++
++export-paris2016 :
++ type : pandas.CSVDataSet
++ filepath: "data/01_raw/export-paris2016.csv"
++ load_args:
++   sep: ','
++
++export-paris2017 :
++ type : pandas.CSVDataSet
++ filepath: "data/01_raw/export-paris2017.csv"
++ load_args:
++   sep: ','
++
++export-paris2018 :
++ type : pandas.CSVDataSet
++ filepath: "data/01_raw/export-paris2018.csv"
++ load_args:
++   sep: ','
++
++export-paris2019 :
++ type : pandas.CSVDataSet
++ filepath: "data/01_raw/export-paris2019.csv"
++ load_args:
++   sep: ','
++
++commercesparis :
++ type : pandas.CSVDataSet
++ filepath: "data/01_raw/commercesparis.csv"
++
++EMPRISE_BATIE_PARIS :
++ type : pandas.CSVDataSet
++ filepath: "data/01_raw/EMPRISE_BATIE_PARIS.csv"
++
++emprise-batie-et-non-batie :
++ type : pandas.CSVDataSet
++ filepath: "data/01_raw/emprise-batie-et-non-batie.csv"
++
++etablissements-scolaires :
++ type : pandas.CSVDataSet
++ filepath: "data/01_raw/etablissements-scolaires.csv"
++
++logements-sociaux-finances-a-paris :
++  type : pandas.CSVDataSet
++  filepath: "data/01_raw/logements-sociaux-finances-a-paris.csv"
++
++positions-geographiques-des-stations-du-reseau-ratp :
++ type : pandas.CSVDataSet
++ filepath: "data/01_raw/positions-geographiques-des-stations-du-reseau-ratp.csv"
++
++MOD_LOGEMT_2015 :
++ type : pandas.TextDataSet
++ filepath: "data/01_raw/RP2015/MOD_LOGEMT_2015.txt"
++ load_args:
++    sep: ';'
++
++FD_LOGEMTZA_2015 :
++ type : pandas.TextDataSet
++ filepath: "data/01_raw/RP2015/FD_LOGEMTZA_2015.txt"
++ load_args:
++    sep: ';'
+\ No newline at end of file
+Index: immobilier-mckinsey/src/immo/pipelines/data_engineering/pipeline.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>from kedro.pipeline import node, Pipeline\nfrom immo.pipelines.data_engineering.nodes import (\n    sep_voies,\n    mask_duplica_vf,\n    cond_filtering_cadastre,\n    normalisation,\n    first_digits,\n    get_square_meter_price,\n    corr_type_de_voie_vf,\n)\nfrom immo.pipelines.data_engineering.global_variables import parameters\n\n\ndef pipeline_merge_arrond_2014( **kwargs):\n    return Pipeline (\n    [\n        node(func = sep_voies,\n            inputs = ['adresses-cadastre-75'],\n            outputs = 'cadastre_trie',\n            name = 'cadastre_trie'\n        ),\n\n\n        node(func = normalisation,\n           inputs = 'cadastre_trie',\n            outputs = 'cadastre_i_normed',\n            name = 'cadastre_i_normed'\n        ),\n\n        node(func = mask_duplica_vf,\n           inputs = 'valeursfoncieres-2014',\n            outputs = 'vf_paris',\n            name = 'vf_paris'\n        ),\n\n        node(func = get_square_meter_price,\n           inputs = 'vf_paris',\n            outputs = 'vf_paris_sqm',\n            name = 'vf_paris_sqm'\n        ),\n\n        node(func = corr_type_de_voie_vf,\n           inputs = 'vf_paris_sqm',\n            outputs = 'vf_paris_corr',\n            name = 'vf_paris_corr'\n        ),\n\n\n        ]\n    )\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- immobilier-mckinsey/src/immo/pipelines/data_engineering/pipeline.py	(revision 9e5ff9e04c6fb723e76f970a6c302dc10594417a)
++++ immobilier-mckinsey/src/immo/pipelines/data_engineering/pipeline.py	(date 1589535782452)
+@@ -2,11 +2,10 @@
+ from immo.pipelines.data_engineering.nodes import (
+     sep_voies,
+     mask_duplica_vf,
+-    cond_filtering_cadastre,
+     normalisation,
+-    first_digits,
+     get_square_meter_price,
+     corr_type_de_voie_vf,
++    merger
+ )
+ from immo.pipelines.data_engineering.global_variables import parameters
+ 
+@@ -22,30 +21,28 @@
+ 
+ 
+         node(func = normalisation,
+-           inputs = 'cadastre_trie',
++            inputs = 'cadastre_trie',
+             outputs = 'cadastre_i_normed',
+             name = 'cadastre_i_normed'
+         ),
+ 
+         node(func = mask_duplica_vf,
+-           inputs = 'valeursfoncieres-2014',
+-            outputs = 'vf_paris',
+-            name = 'vf_paris'
+-        ),
+-
+-        node(func = get_square_meter_price,
+-           inputs = 'vf_paris',
++            inputs = 'valeursfoncieres-2014',
+             outputs = 'vf_paris_sqm',
+             name = 'vf_paris_sqm'
+         ),
+ 
+         node(func = corr_type_de_voie_vf,
+-           inputs = 'vf_paris_sqm',
++            inputs = 'vf_paris_sqm',
+             outputs = 'vf_paris_corr',
+             name = 'vf_paris_corr'
+         ),
+ 
+-
++        node(func = merger,
++             inputs = ['cadastre_i_normed', 'vf_paris_corr'],
++             outputs = 'master_table_2014',
++             name = 'master_table_2014'
++             ),
+         ]
+     )
+ 
+Index: immobilier-mckinsey/src/immo/pipelines/data_engineering/nodes.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>\nimport jellyfish\nimport pandas as pd\nfrom pandas.testing import assert_frame_equal\nfrom immo.pipelines.data_engineering.global_variables import parameters\n    # Since normalization rules have to be applied to multiple dataframes, you better make them global\n    # Careful with column names, they can make you spend hours debugging\nimport json\nimport numpy as np\nimport math\nimport matplotlib.pyplot as plt\nimport folium\nfrom shapely.geometry import Point, Polygon\nimport geopandas\n\n\n\n\n# ------------------- Merging Functions ------------------- #\n\n#-------------------------------------------------------cleaned\n\ndef normalisation(str_err):\n    \"\"\"\n    Function to normalize a string through four steps :\n    - replacing errors related to accents encoding\n    - lowercasing\n    - stop words removal\n    - normalizing common names (place, general, ...) into abbreviations\n    Normalization rules are imported from global variables.py\n\n    Args:\n        str_err (string): the string to normalize\n\n    Returns:\n        string: the normalized string\n    \"\"\"\n    # Replace accents related errors\n    str_accents = str_err\n    for encod_err, encod_corr in parameters[\"norm_accents\"].items():\n        str_accents = str_accents.replace(encod_err, encod_corr)\n    # Lowercase the string\n    str_lower = str_accents.lower()\n    # Remove stop_words\n    str_stopwords = \" \".join(\n        [\n            word\n            for word in str_lower.split(\" \")\n            if (word not in parameters[\"stop_words\"]) and (len(word) > 0)\n        ]\n    )\n    # Abbreviate common names\n    str_abbreviate = str_stopwords\n    for long_name, abbr_name in parameters[\"norm_abbrevations\"].items():\n        str_abbreviate = str_abbreviate.replace(long_name, abbr_name)\n    return str_abbreviate\n\n\ndef compare(\n    ref_address_number,\n    ref_address_type,\n    ref_address_street,\n    comp_address_number,\n    comp_address_type,\n    comp_address_street,\n    distance_threshold=0.9,\n):\n    \"\"\"\n    Computes the Jaro Distance (https://rosettacode.org/wiki/Jaro_distance) on two normalized strings.\n    The normalization process is developed in the normalisation function.\n    Requires jellyfish version xx.yy.\n\n    Args:\n        ref_address_number (string): the number of the address to compare with\n        ref_address_type (string): the type of the address to compare with\n        ref_address_street (string): the street of the address to compare with\n        comp_address_number (string): the number of the address to be compared\n        comp_address_type (string): the type of the address to be compared\n        comp_address_street (string): the street of the address to be compared\n        distance_threshold (float): the [0, 1] threshold on the Jaro distance that returns the boolean\n\n    Returns:\n        boolean: did the Jaro distance match the ref address and comp address ?\n    \"\"\"\n    # If the type and number of the addresses are the same,\n    match_condition = ref_address_number == comp_address_number\n    match_condition &= ref_address_type == comp_address_type\n    # and the distance is upper than the threshold (0: no similarity, 1: perfect match),\n    ref_norm = normalisation(\" \" + ref_address_street)\n    comp_norm = normalisation(\" \" + comp_address_street)\n    match_condition &= jellyfish.jaro_distance(ref_norm, comp_norm) > distance_threshold\n    # then the addresses are the same\n    if match_condition:\n        return True\n    else:\n        return False\n\n# ------------------- Merger -------------------#\n\ndef merger(clean_cadastre, clean_valeur_fonc, columns_merger = [\"No voie\",\"Type de voie\",\"Voie\", parameters[\"vf_price_nominal\"], parameters[\"vf_built_area\" ],\nparameters[\"vf_square_meter_price\"]], columns_cadastre_compare = [parameters[\"cad_street_num\"],parameters[\"cad_street_type\"],parameters[\"cad_street_name\"]], columns_vf_compare = [parameters[\"vf_street_num\"],parameters[\"vf_street_type\"],parameters[\"vf_street_name\"]]):\n\n\n    '''\n    This fucntion is the final step, it takes the clean table of  cadastre as the scafold, it also needs the name of the columns that need to be compared in both and the list of columns that we want to add to the scafold from valeur fonciere. Then it compares the data and everytime it gets a match, the data from valeur fonciere is added to the scafold.\n    Args:\n        clean_cadastre (pandas dataframe): the cleaned table of cadastre\n        clean_valeur_fonciere (pandas dataframe): the cleaned table of valeur fonciere\n        columns_merger (list): list of columns to add to the clean cadastre\n        columns_compare (list): list of columns to compare between the two sets\n    Returns:\n        master_table_f (pandas dataframe): the final master table with both sets merged\n    '''\n\n\n    master_table = clean_cadastre.copy() #Copying of cadastre\n    long_columns_merger = len(columns_merger)\n    for i in columns_merger:\n        master_table[i] = np.NaN\n\n    M1 = np.array(clean_cadastre)\n    M2 = np.array(clean_valeur_fonc) # Passing to numpy\n    R = np.array(master_table)\n    columns_clean_cadastre = list(clean_cadastre.columns)\n    columns_clean_valeur_fonc = list(clean_valeur_fonc.columns)\n    columns_master_table = list(master_table.columns)\n\n    indexem_columns_clean_valeur_fonc = [columns_clean_valeur_fonc.index(i) for i in columns_merger] # Indexes of the columns in valeur_fonciere to merge\n\n    indexem_columns_master_table = [columns_master_table.index(i) for i in columns_merger] # Indexes of the columns in master_table to merge\n\n    #Those list are necessary to work with numpy instead of pandas\n    indexec_columns_clean_cadastre = [columns_clean_cadastre.index(i) for i in columns_cadastre_compare] # Indexes of the columns in cadastre that we have to compare\n\n    indexec_columns_clean_valeur_fonc = [columns_clean_valeur_fonc.index(i) for i in columns_vf_compare] # Indexes of the columns in valeur_fonciere that we have to compare\n\n    a = len(M1[:,0])\n    b = len(M1[:,0])\n\n\n#Since we are basing our comparison on the number, street type and street, I created a tuple with those 3 infos in it, this tuple needs to be modified if we are to compare other informations between the two sets\n\n    for i in range (a):\n        (Num1, Type1, Voie1) = (M1[i, p] for p in indexec_columns_clean_cadastre)\n\n        for j in range (b):\n            (Num2, Type2, Voie2) = (M2[j, p] for p in indexec_columns_clean_cadastre)\n\n            if compare(Num1, Type1, Voie1, Num2, Type2, Voie2):\n\n                for k in range (long_columns_merger):\n                    R[i, indexem_columns_master_table[k]] = M2[j, indexem_columns_clean_valeur_fonc[k]]\n\n    master_table_f = pd.DataFrame(R)\n    master_table_f.columns = master_table.columns\n\n    return master_table_f\n\n# ------------------- Cleaning Functions ------------------- #\n\n\n\n\ndef sep_voies(cadastre_df):\n    \"\"\"\n    Splits the cad_street_full column in the cadastre into cad_street_type and cad_street name,\n    to match the format in the \"valeurs foncieres\" table.\n\n    Args:\n        cadastre_df (pandas dataframe): the cadastre table\n\n    Returns:\n        pandas dataframe: the cadastre table, with the cad_street_full column,\n        splitted into the cad_street_type and cad_street_name columns.\n    \"\"\"\n    # The pd.DataFrame.apply() method is the best to apply any type of function\n    # It prevents from looping on pd df, which is very costly\n    cadastre_df[parameters[\"cad_street_type\"]] = cadastre_df[parameters[\"cad_street_full\"]].apply(\n        lambda x: x.split(\" \")[0]\n    )\n    cadastre_df[parameters[\"cad_street_name\"]] = cadastre_df[parameters[\"cad_street_full\"]].apply(\n        lambda x: \" \".join(x.split(\" \")[1:])\n    )\n    return cadastre_df.drop(parameters[\"cad_street_full\"], axis=1)\n\n\ndef corr_type_de_voie_vf(valeur_fonc_df):\n    \"\"\"\n    Corrects the vf_street_type column in the \"valeur foncière\" table, for future comparison with the \"cadastre table\".\n    Corrections are made according to the norm_street_types dictionary in defined in global variables.\n\n    Args:\n        valeur_fonc_df (pandas dataframe): a dataframe with a street_type column to be standardized to the values in cadastre\n\n    Returns:\n        pandas dataframe: the same dataframe, with standardized values in the street_type column\n    \"\"\"\n    valeur_fonc_df[parameters[\"vf_street_type\"]] = valeur_fonc_df[parameters[\"vf_street_type\"]].apply(\n        lambda x: parameters[\"norm_street_types[x]\"] if x in parameters[\"norm_street_types\"].keys() else x\n    )\n    return valeur_fonc_df\n\n\ndef mask_duplica_vf(df_vf):\n\n    \"\"\"\n\n    This function selects the Paris lines in the \"valeur fonciere\" dataframe\n\n    It then groups the parcels sold together (same adress) in a single surface and deletes the useless lines in order to only have one line for each individual parcel under the same adress\n\n\n    \"\"\"\n    df_paris = pd.DataFrame(columns = df_vf.columns)\n    for i in range (75001, 75021):\n        df_paris = master.append(cond(df_vf, 'Code postal', i))\n\n    master = df_paris\n    length_paris = len(df_paris.index)\n    master.index = [i for i in range (n)]\n    C_surface = np.array(master['Surface reelle bati'])\n    i = 0\n    while i < n-1:\n        k = 1\n        surface_i = master.loc[i]['Surface reelle bati']\n        if master.duplicated(['Valeur fonciere', 'Date mutation', 'Section'])[i]:\n            while master.loc[i]['Section'] == master.loc[i+k]['Section']:\n                surface_i += master.loc[i+k]['Surface reelle bati']\n                k += 1\n            C_surface[i] = surface_i\n        i += k\n    del master['Surface reelle bati']\n    master.insert(38,'Surface reelle bati' ,C_surface)\n    return master.drop_duplicates(['Date mutation', 'Valeur fonciere', 'Section'], keep='first')\n\n\ndef get_square_meter_price(valeur_fonc_df):\n    \"\"\"\n    Corrects the vf_square_meter_price column in the \"valeur foncière\" table, as vf_price_nominal divided by vf_built_area.\n\n    Args:\n        valeur_fonc_df (pandas dataframe): a dataframe with vf_price_nominal and vf_built_area columns.\n\n    Returns:\n        pandas dataframe: the same dataframe, with the new vf_square_meter_price column.\n    \"\"\"\n    valeur_fonc_df[parameters[\"vf_square_meter_price\"]] = (\n        valeur_fonc_df[parameters[\"vf_price_nominal\"]] / valeur_fonc_df[parameters[\"vf_built_area\"]]\n    ).round()\n    # TO DO : catch the surface == 0 exception\n    return valeur_fonc_df\n\n\n#------------------------------------------------------------- not cleaned\n\n##Nous avons finalement décidé de ne pas découper cadastre_75 en arrondissement\n\n# #----functions and parameters for cond_filtering_cadastre\n# def first_digits(number):\n#     if str(number)[:2]!='na':\n#         return int(str(number)[:2])\n#     else:\n#         return 0\n#\n# CODE_POSTAL_CADASTRE = 'code_postal'\n# CODE_POSTAL_VF = 'code_postal'\n# ARROND=750\n#\n# def cond_filtering_cadastre(cadastre_df, code_postal = CODE_POSTAL_CADASTRE , arrond = ARROND):\n#     \"\"\"\n#     Selects the part of the \"cadastre_df\" corresponding to the appropriate postal code\n#\n#     \"\"\"\n#     return cadastre_df[cadastre_df[code_postal].apply(first_digits) == arrond]\n# #-------\n\n\n\n\n\n\n\n\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- immobilier-mckinsey/src/immo/pipelines/data_engineering/nodes.py	(revision 9e5ff9e04c6fb723e76f970a6c302dc10594417a)
++++ immobilier-mckinsey/src/immo/pipelines/data_engineering/nodes.py	(date 1589535722972)
+@@ -1,11 +1,6 @@
+-
+-import jellyfish
++#import jellyfish
+ import pandas as pd
+-from pandas.testing import assert_frame_equal
+ from immo.pipelines.data_engineering.global_variables import parameters
+-    # Since normalization rules have to be applied to multiple dataframes, you better make them global
+-    # Careful with column names, they can make you spend hours debugging
+-import json
+ import numpy as np
+ import math
+ import matplotlib.pyplot as plt
+@@ -97,7 +92,7 @@
+ 
+ # ------------------- Merger -------------------#
+ 
+-def merger(clean_cadastre, clean_valeur_fonc, columns_merger = ["No voie","Type de voie","Voie", parameters["vf_price_nominal"], parameters["vf_built_area" ],
++def merger(clean_cadastre, clean_valeur_fonc, columns_merger = [parameters["vf_price_nominal"], parameters["vf_built_area" ],
+ parameters["vf_square_meter_price"]], columns_cadastre_compare = [parameters["cad_street_num"],parameters["cad_street_type"],parameters["cad_street_name"]], columns_vf_compare = [parameters["vf_street_num"],parameters["vf_street_type"],parameters["vf_street_name"]]):
+ 
+ 
+@@ -106,8 +101,10 @@
+     Args:
+         clean_cadastre (pandas dataframe): the cleaned table of cadastre
+         clean_valeur_fonciere (pandas dataframe): the cleaned table of valeur fonciere
+-        columns_merger (list): list of columns to add to the clean cadastre
+-        columns_compare (list): list of columns to compare between the two sets
++        columns_merger (list): list of columns to add to clean cadastre
++        columns_cadastre_compare (list): list of columns in cadastre to compare with valeur fonciere
++        columns_vf_compare (list): list of columns in valeur fonciere to compare with cadastre
++
+     Returns:
+         master_table_f (pandas dataframe): the final master table with both sets merged
+     '''
+@@ -144,7 +141,7 @@
+         (Num1, Type1, Voie1) = (M1[i, p] for p in indexec_columns_clean_cadastre)
+ 
+         for j in range (b):
+-            (Num2, Type2, Voie2) = (M2[j, p] for p in indexec_columns_clean_cadastre)
++            (Num2, Type2, Voie2) = (M2[j, p] for p in indexec_columns_clean_valeur_fonc)
+ 
+             if compare(Num1, Type1, Voie1, Num2, Type2, Voie2):
+ 
+@@ -159,8 +156,6 @@
+ # ------------------- Cleaning Functions ------------------- #
+ 
+ 
+-
+-
+ def sep_voies(cadastre_df):
+     """
+     Splits the cad_street_full column in the cadastre into cad_street_type and cad_street name,
+@@ -231,7 +226,8 @@
+         i += k
+     del master['Surface reelle bati']
+     master.insert(38,'Surface reelle bati' ,C_surface)
+-    return master.drop_duplicates(['Date mutation', 'Valeur fonciere', 'Section'], keep='first')
++    master_f = master.drop_duplicates(['Date mutation', 'Valeur fonciere', 'Section'], keep='first')
++    return(get_square_meter_price(master_f)) #On combine get square meter et mask
+ 
+ 
+ def get_square_meter_price(valeur_fonc_df):
+@@ -255,24 +251,24 @@
+ 
+ ##Nous avons finalement décidé de ne pas découper cadastre_75 en arrondissement
+ 
+-# #----functions and parameters for cond_filtering_cadastre
+-# def first_digits(number):
++#functions and parameters for cond_filtering_cadastre
++#def first_digits(number):
+ #     if str(number)[:2]!='na':
+ #         return int(str(number)[:2])
+ #     else:
+-#         return 0
+-#
+-# CODE_POSTAL_CADASTRE = 'code_postal'
+-# CODE_POSTAL_VF = 'code_postal'
+-# ARROND=750
+-#
+-# def cond_filtering_cadastre(cadastre_df, code_postal = CODE_POSTAL_CADASTRE , arrond = ARROND):
+-#     """
++#        return 0
++
++#CODE_POSTAL_CADASTRE = 'code_postal'
++#CODE_POSTAL_VF = 'code_postal'
++#ARROND=750
++
++#def cond_filtering_cadastre(cadastre_df, code_postal = CODE_POSTAL_CADASTRE , arrond = ARROND):
++#    """
+ #     Selects the part of the "cadastre_df" corresponding to the appropriate postal code
+ #
+ #     """
+ #     return cadastre_df[cadastre_df[code_postal].apply(first_digits) == arrond]
+-# #-------
++
+ 
+ 
+ 
+Index: immobilier-mckinsey/src/immo/pipelines/data_engineering/global_variables.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>\n\n\nparameters = {\n# Column Names\n# Valeurs Foncieres table\n\"vf_street_num\" : \"No voie\"\n\"vf_street_name\" : \"Voie\"\n\"vf_street_type\" : \"Type de voie\",\n\"vf_price_nominal\" : \"Valeur fonciere\",\n\"vf_built_area\" : \"Surface reelle bati\",\n\"vf_square_meter_price\" : \"prix_m2\",\n# Cadastre table\n\"cad_street_num\" : \"numero\"\n\"cad_street_full\" : \"voie_nom\",\n\"cad_street_type\" : \"Type de voie\",\n\"cad_street_name\" : \"Nom de voie\",\n\n# Addresses Normalization\n\"norm_street_types\" : {\n    \"BD\": \"Boulevard\",\n    \"AV\": \"Avenue\",\n    \"RTE\": \"Route\",\n    \"CHEM\": \"Chemin\",\n    \"IMP\": \"Impasse\",\n    \"PL\": \"Place\",\n},\n\"norm_accents\" : {\n    'Ã©':'e',\n    'Ã¨':'e',\n    'Ã´':'o',\n    'Ã¢':'a',\n    'Ã»':'u',\n    \"Ãª\":'e',\n},\n\"norm_abbrevations\" : {\n    \"general\": \"gen\",\n    \"place\": \"pl\",\n    \"impasse\": \"imp\",\n    \"docteur\": \"doc\",\n    \"saint\": \"st\",\n    \"route\": \"ret\",\n    \"boulevard\": \"bd\",\n    \"avenue\": \"av\",\n    \"allee\": \"all\",\n    \"sentier\": \"sen\",\n    \"chemin\": \"che\",\n    \"lotissement\": \"lot\",\n    \"passage\": \"pas\",\n    \"promenade\": \"prom\",\n},\n\"stop_words\" : [\"de\", \"du\", \"la\", \"des\", \"d'\", \"l'\", \"les\", \"le\", \"la\"]\n\n}\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- immobilier-mckinsey/src/immo/pipelines/data_engineering/global_variables.py	(revision 9e5ff9e04c6fb723e76f970a6c302dc10594417a)
++++ immobilier-mckinsey/src/immo/pipelines/data_engineering/global_variables.py	(date 1589534197390)
+@@ -1,17 +1,14 @@
+-
+-
+-
+ parameters = {
+ # Column Names
+ # Valeurs Foncieres table
+-"vf_street_num" : "No voie"
+-"vf_street_name" : "Voie"
++"vf_street_num" : "No voie",
++"vf_street_name" : "Voie",
+ "vf_street_type" : "Type de voie",
+ "vf_price_nominal" : "Valeur fonciere",
+ "vf_built_area" : "Surface reelle bati",
+ "vf_square_meter_price" : "prix_m2",
+ # Cadastre table
+-"cad_street_num" : "numero"
++"cad_street_num" : "numero",
+ "cad_street_full" : "voie_nom",
+ "cad_street_type" : "Type de voie",
+ "cad_street_name" : "Nom de voie",
+Index: .idea/misc.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<project version=\"4\">\n  <component name=\"ProjectRootManager\" version=\"2\" project-jdk-name=\"Python 3.6 (pharma_latest)\" project-jdk-type=\"Python SDK\" />\n</project>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- .idea/misc.xml	(revision 9e5ff9e04c6fb723e76f970a6c302dc10594417a)
++++ .idea/misc.xml	(date 1589531570797)
+@@ -1,4 +1,4 @@
+ <?xml version="1.0" encoding="UTF-8"?>
+ <project version="4">
+-  <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.6 (pharma_latest)" project-jdk-type="Python SDK" />
++  <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.7 (mahemaxence)" project-jdk-type="Python SDK" />
+ </project>
+\ No newline at end of file
+Index: .idea/Projet_Housing_McKinsey_S2.iml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<module type=\"PYTHON_MODULE\" version=\"4\">\n  <component name=\"NewModuleRootManager\">\n    <content url=\"file://$MODULE_DIR$\" />\n    <orderEntry type=\"inheritedJdk\" />\n    <orderEntry type=\"sourceFolder\" forTests=\"false\" />\n  </component>\n  <component name=\"TestRunnerService\">\n    <option name=\"projectConfiguration\" value=\"py.test\" />\n    <option name=\"PROJECT_TEST_RUNNER\" value=\"py.test\" />\n  </component>\n</module>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- .idea/Projet_Housing_McKinsey_S2.iml	(revision 9e5ff9e04c6fb723e76f970a6c302dc10594417a)
++++ .idea/Projet_Housing_McKinsey_S2.iml	(date 1589531570789)
+@@ -2,11 +2,10 @@
+ <module type="PYTHON_MODULE" version="4">
+   <component name="NewModuleRootManager">
+     <content url="file://$MODULE_DIR$" />
+-    <orderEntry type="inheritedJdk" />
++    <orderEntry type="jdk" jdkName="Python 3.7 (mahemaxence)" jdkType="Python SDK" />
+     <orderEntry type="sourceFolder" forTests="false" />
+   </component>
+   <component name="TestRunnerService">
+-    <option name="projectConfiguration" value="py.test" />
+     <option name="PROJECT_TEST_RUNNER" value="py.test" />
+   </component>
+ </module>
+\ No newline at end of file
+Index: .idea/workspace.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<project version=\"4\">\n  <component name=\"ChangeListManager\">\n    <list default=\"true\" id=\"e5a2c5ed-14ca-4ecd-b67e-c4c3a8288231\" name=\"Default\" comment=\"\">\n      <change beforePath=\"$PROJECT_DIR$/immobilier-mckinsey/conf/base/catalog.yml\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/immobilier-mckinsey/conf/base/catalog.yml\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/immobilier-mckinsey/src/immo/pipeline.py\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/immobilier-mckinsey/src/immo/pipeline.py\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/immobilier-mckinsey/src/immo/pipelines/data_engineering/nodes.py\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/immobilier-mckinsey/src/immo/pipelines/data_engineering/nodes.py\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/immobilier-mckinsey/src/immo/pipelines/data_engineering/pipeline.py\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/immobilier-mckinsey/src/immo/pipelines/data_engineering/pipeline.py\" afterDir=\"false\" />\n    </list>\n    <option name=\"EXCLUDED_CONVERTED_TO_IGNORED\" value=\"true\" />\n    <option name=\"TRACKING_ENABLED\" value=\"true\" />\n    <option name=\"SHOW_DIALOG\" value=\"false\" />\n    <option name=\"HIGHLIGHT_CONFLICTS\" value=\"true\" />\n    <option name=\"HIGHLIGHT_NON_ACTIVE_CHANGELIST\" value=\"false\" />\n    <option name=\"LAST_RESOLUTION\" value=\"IGNORE\" />\n  </component>\n  <component name=\"FileEditorManager\">\n    <leaf SIDE_TABS_SIZE_LIMIT_KEY=\"300\">\n      <file leaf-file-name=\"pipeline.py\" pinned=\"false\" current-in-tab=\"false\">\n        <entry file=\"file://$PROJECT_DIR$/immobilier-mckinsey/src/immo/pipeline.py\">\n          <provider selected=\"true\" editor-type-id=\"text-editor\">\n            <state relative-caret-position=\"272\">\n              <caret line=\"16\" selection-start-line=\"16\" selection-end-line=\"16\" />\n              <folding>\n                <element signature=\"e#45#68#0\" expanded=\"true\" />\n              </folding>\n            </state>\n          </provider>\n        </entry>\n      </file>\n      <file leaf-file-name=\"test_run.py\" pinned=\"false\" current-in-tab=\"false\">\n        <entry file=\"file://$PROJECT_DIR$/immobilier-mckinsey/src/tests/test_run.py\">\n          <provider selected=\"true\" editor-type-id=\"text-editor\">\n            <state relative-caret-position=\"507\">\n              <caret line=\"51\" column=\"68\" lean-forward=\"true\" selection-start-line=\"51\" selection-start-column=\"68\" selection-end-line=\"51\" selection-end-column=\"68\" />\n              <folding>\n                <element signature=\"e#1704#1728#0\" expanded=\"true\" />\n              </folding>\n            </state>\n          </provider>\n        </entry>\n      </file>\n      <file leaf-file-name=\"catalog.yml\" pinned=\"false\" current-in-tab=\"false\">\n        <entry file=\"file://$PROJECT_DIR$/test/conf/base/catalog.yml\">\n          <provider selected=\"true\" editor-type-id=\"text-editor\">\n            <state relative-caret-position=\"-298\" />\n          </provider>\n        </entry>\n      </file>\n      <file leaf-file-name=\"credentials.yml\" pinned=\"false\" current-in-tab=\"false\">\n        <entry file=\"file://$PROJECT_DIR$/test/conf/base/credentials.yml\">\n          <provider selected=\"true\" editor-type-id=\"text-editor\" />\n        </entry>\n      </file>\n      <file leaf-file-name=\"logging.yml\" pinned=\"false\" current-in-tab=\"false\">\n        <entry file=\"file://$PROJECT_DIR$/test/conf/base/logging.yml\">\n          <provider selected=\"true\" editor-type-id=\"text-editor\">\n            <state relative-caret-position=\"-459\" />\n          </provider>\n        </entry>\n      </file>\n      <file leaf-file-name=\"pipeline.py\" pinned=\"false\" current-in-tab=\"false\">\n        <entry file=\"file://$PROJECT_DIR$/test/src/testpack/pipeline.py\">\n          <provider selected=\"true\" editor-type-id=\"text-editor\">\n            <state relative-caret-position=\"-508\">\n              <folding>\n                <element signature=\"e#1472#1495#0\" expanded=\"true\" />\n              </folding>\n            </state>\n          </provider>\n        </entry>\n      </file>\n      <file leaf-file-name=\"pipeline.py\" pinned=\"false\" current-in-tab=\"false\">\n        <entry file=\"file://$PROJECT_DIR$/test/src/testpack/pipelines/data_engineering/pipeline.py\">\n          <provider selected=\"true\" editor-type-id=\"text-editor\">\n            <state relative-caret-position=\"248\">\n              <caret line=\"34\" selection-start-line=\"34\" selection-end-line=\"34\" />\n              <folding>\n                <element signature=\"e#1613#1654#0\" expanded=\"true\" />\n              </folding>\n            </state>\n          </provider>\n        </entry>\n      </file>\n      <file leaf-file-name=\"nodes.py\" pinned=\"false\" current-in-tab=\"false\">\n        <entry file=\"file://$PROJECT_DIR$/test/src/testpack/pipelines/data_engineering/nodes.py\">\n          <provider selected=\"true\" editor-type-id=\"text-editor\">\n            <state relative-caret-position=\"-407\">\n              <folding>\n                <element signature=\"e#1618#1646#0\" expanded=\"true\" />\n              </folding>\n            </state>\n          </provider>\n        </entry>\n      </file>\n      <file leaf-file-name=\"parameters.yml\" pinned=\"false\" current-in-tab=\"true\">\n        <entry file=\"file://$PROJECT_DIR$/test/conf/base/parameters.yml\">\n          <provider selected=\"true\" editor-type-id=\"text-editor\" />\n        </entry>\n      </file>\n      <file leaf-file-name=\"requirements.txt\" pinned=\"false\" current-in-tab=\"false\">\n        <entry file=\"file://$PROJECT_DIR$/immobilier-mckinsey/src/requirements.txt\">\n          <provider selected=\"true\" editor-type-id=\"text-editor\">\n            <state relative-caret-position=\"-918\" />\n          </provider>\n        </entry>\n      </file>\n    </leaf>\n  </component>\n  <component name=\"Git.Settings\">\n    <option name=\"RECENT_GIT_ROOT_PATH\" value=\"$PROJECT_DIR$\" />\n  </component>\n  <component name=\"IdeDocumentHistory\">\n    <option name=\"CHANGED_PATHS\">\n      <list>\n        <option value=\"$PROJECT_DIR$/immobilier-mckinsey/src/immo/pipelines/data_engineering/nodes.py\" />\n        <option value=\"$PROJECT_DIR$/immobilier-mckinsey/src/immo/pipeline.py\" />\n        <option value=\"$PROJECT_DIR$/immobilier-mckinsey/src/immo/pipelines/data_engineering/pipeline.py\" />\n        <option value=\"$PROJECT_DIR$/immobilier-mckinsey/conf/base/catalog.yml\" />\n      </list>\n    </option>\n  </component>\n  <component name=\"ProjectFrameBounds\" extendedState=\"6\">\n    <option name=\"x\" value=\"465\" />\n    <option name=\"width\" value=\"1170\" />\n    <option name=\"height\" value=\"820\" />\n  </component>\n  <component name=\"ProjectView\">\n    <navigator proportions=\"\" version=\"1\">\n      <foldersAlwaysOnTop value=\"true\" />\n    </navigator>\n    <panes>\n      <pane id=\"Scope\" />\n      <pane id=\"ProjectPane\">\n        <subPane>\n          <expand>\n            <path>\n              <item name=\"Projet_Housing_McKinsey_S2\" type=\"b2602c69:ProjectViewProjectNode\" />\n              <item name=\"Projet_Housing_McKinsey_S2\" type=\"462c0819:PsiDirectoryNode\" />\n            </path>\n            <path>\n              <item name=\"Projet_Housing_McKinsey_S2\" type=\"b2602c69:ProjectViewProjectNode\" />\n              <item name=\"Projet_Housing_McKinsey_S2\" type=\"462c0819:PsiDirectoryNode\" />\n              <item name=\"test\" type=\"462c0819:PsiDirectoryNode\" />\n            </path>\n            <path>\n              <item name=\"Projet_Housing_McKinsey_S2\" type=\"b2602c69:ProjectViewProjectNode\" />\n              <item name=\"Projet_Housing_McKinsey_S2\" type=\"462c0819:PsiDirectoryNode\" />\n              <item name=\"test\" type=\"462c0819:PsiDirectoryNode\" />\n              <item name=\"conf\" type=\"462c0819:PsiDirectoryNode\" />\n            </path>\n            <path>\n              <item name=\"Projet_Housing_McKinsey_S2\" type=\"b2602c69:ProjectViewProjectNode\" />\n              <item name=\"Projet_Housing_McKinsey_S2\" type=\"462c0819:PsiDirectoryNode\" />\n              <item name=\"test\" type=\"462c0819:PsiDirectoryNode\" />\n              <item name=\"conf\" type=\"462c0819:PsiDirectoryNode\" />\n              <item name=\"base\" type=\"462c0819:PsiDirectoryNode\" />\n            </path>\n            <path>\n              <item name=\"Projet_Housing_McKinsey_S2\" type=\"b2602c69:ProjectViewProjectNode\" />\n              <item name=\"Projet_Housing_McKinsey_S2\" type=\"462c0819:PsiDirectoryNode\" />\n              <item name=\"test\" type=\"462c0819:PsiDirectoryNode\" />\n              <item name=\"src\" type=\"462c0819:PsiDirectoryNode\" />\n            </path>\n            <path>\n              <item name=\"Projet_Housing_McKinsey_S2\" type=\"b2602c69:ProjectViewProjectNode\" />\n              <item name=\"Projet_Housing_McKinsey_S2\" type=\"462c0819:PsiDirectoryNode\" />\n              <item name=\"test\" type=\"462c0819:PsiDirectoryNode\" />\n              <item name=\"src\" type=\"462c0819:PsiDirectoryNode\" />\n              <item name=\"testpack\" type=\"462c0819:PsiDirectoryNode\" />\n            </path>\n            <path>\n              <item name=\"Projet_Housing_McKinsey_S2\" type=\"b2602c69:ProjectViewProjectNode\" />\n              <item name=\"Projet_Housing_McKinsey_S2\" type=\"462c0819:PsiDirectoryNode\" />\n              <item name=\"test\" type=\"462c0819:PsiDirectoryNode\" />\n              <item name=\"src\" type=\"462c0819:PsiDirectoryNode\" />\n              <item name=\"testpack\" type=\"462c0819:PsiDirectoryNode\" />\n              <item name=\"pipelines\" type=\"462c0819:PsiDirectoryNode\" />\n            </path>\n            <path>\n              <item name=\"Projet_Housing_McKinsey_S2\" type=\"b2602c69:ProjectViewProjectNode\" />\n              <item name=\"Projet_Housing_McKinsey_S2\" type=\"462c0819:PsiDirectoryNode\" />\n              <item name=\"test\" type=\"462c0819:PsiDirectoryNode\" />\n              <item name=\"src\" type=\"462c0819:PsiDirectoryNode\" />\n              <item name=\"testpack\" type=\"462c0819:PsiDirectoryNode\" />\n              <item name=\"pipelines\" type=\"462c0819:PsiDirectoryNode\" />\n              <item name=\"data_engineering\" type=\"462c0819:PsiDirectoryNode\" />\n            </path>\n            <path>\n              <item name=\"Projet_Housing_McKinsey_S2\" type=\"b2602c69:ProjectViewProjectNode\" />\n              <item name=\"Projet_Housing_McKinsey_S2\" type=\"462c0819:PsiDirectoryNode\" />\n              <item name=\"test\" type=\"462c0819:PsiDirectoryNode\" />\n              <item name=\"src\" type=\"462c0819:PsiDirectoryNode\" />\n              <item name=\"testpack\" type=\"462c0819:PsiDirectoryNode\" />\n              <item name=\"pipelines\" type=\"462c0819:PsiDirectoryNode\" />\n              <item name=\"data_science\" type=\"462c0819:PsiDirectoryNode\" />\n            </path>\n          </expand>\n          <select />\n        </subPane>\n      </pane>\n    </panes>\n  </component>\n  <component name=\"PropertiesComponent\">\n    <property name=\"last_opened_file_path\" value=\"$PROJECT_DIR$\" />\n  </component>\n  <component name=\"RunDashboard\">\n    <option name=\"ruleStates\">\n      <list>\n        <RuleState>\n          <option name=\"name\" value=\"ConfigurationTypeDashboardGroupingRule\" />\n        </RuleState>\n        <RuleState>\n          <option name=\"name\" value=\"StatusDashboardGroupingRule\" />\n        </RuleState>\n      </list>\n    </option>\n  </component>\n  <component name=\"SvnConfiguration\">\n    <configuration />\n  </component>\n  <component name=\"TaskManager\">\n    <task active=\"true\" id=\"Default\" summary=\"Default task\">\n      <changelist id=\"e5a2c5ed-14ca-4ecd-b67e-c4c3a8288231\" name=\"Default\" comment=\"\" />\n      <created>1586245114311</created>\n      <option name=\"number\" value=\"Default\" />\n      <option name=\"presentableId\" value=\"Default\" />\n      <updated>1586245114311</updated>\n    </task>\n    <servers />\n  </component>\n  <component name=\"ToolWindowManager\">\n    <frame x=\"-7\" y=\"-7\" width=\"1550\" height=\"838\" extended-state=\"6\" />\n    <editor active=\"true\" />\n    <layout>\n      <window_info active=\"true\" content_ui=\"combo\" id=\"Project\" order=\"0\" visible=\"true\" weight=\"0.25\" />\n      <window_info anchor=\"bottom\" id=\"TODO\" order=\"6\" />\n      <window_info anchor=\"bottom\" id=\"Event Log\" order=\"7\" side_tool=\"true\" />\n      <window_info anchor=\"bottom\" id=\"Run\" order=\"2\" />\n      <window_info anchor=\"bottom\" id=\"Version Control\" order=\"7\" />\n      <window_info anchor=\"bottom\" id=\"Python Console\" order=\"7\" />\n      <window_info id=\"Structure\" order=\"1\" side_tool=\"true\" weight=\"0.25\" />\n      <window_info anchor=\"bottom\" id=\"Terminal\" order=\"7\" />\n      <window_info anchor=\"bottom\" id=\"Debug\" order=\"3\" weight=\"0.4\" />\n      <window_info id=\"Favorites\" order=\"2\" side_tool=\"true\" />\n      <window_info anchor=\"right\" content_ui=\"combo\" id=\"Hierarchy\" order=\"2\" weight=\"0.25\" />\n      <window_info anchor=\"right\" id=\"Commander\" internal_type=\"SLIDING\" order=\"0\" type=\"SLIDING\" weight=\"0.4\" />\n      <window_info anchor=\"right\" id=\"Ant Build\" order=\"1\" weight=\"0.25\" />\n      <window_info anchor=\"bottom\" id=\"Message\" order=\"0\" />\n      <window_info anchor=\"bottom\" id=\"Inspection\" order=\"5\" weight=\"0.4\" />\n      <window_info anchor=\"bottom\" id=\"Cvs\" order=\"4\" weight=\"0.25\" />\n      <window_info anchor=\"bottom\" id=\"Find\" order=\"1\" />\n    </layout>\n    <layout-to-restore>\n      <window_info anchor=\"right\" content_ui=\"combo\" id=\"Hierarchy\" order=\"2\" weight=\"0.25\" />\n      <window_info anchor=\"bottom\" id=\"Run\" order=\"2\" />\n      <window_info anchor=\"bottom\" id=\"Cvs\" order=\"4\" weight=\"0.25\" />\n      <window_info active=\"true\" content_ui=\"combo\" id=\"Project\" order=\"0\" visible=\"true\" weight=\"0.25\" />\n      <window_info id=\"Structure\" order=\"1\" side_tool=\"true\" weight=\"0.25\" />\n      <window_info anchor=\"right\" id=\"Commander\" internal_type=\"SLIDING\" order=\"0\" type=\"SLIDING\" weight=\"0.4\" />\n      <window_info anchor=\"right\" id=\"Ant Build\" order=\"1\" weight=\"0.25\" />\n      <window_info anchor=\"bottom\" id=\"TODO\" order=\"6\" />\n      <window_info anchor=\"bottom\" id=\"Find\" order=\"1\" />\n      <window_info anchor=\"bottom\" id=\"Python Console\" order=\"7\" />\n      <window_info anchor=\"bottom\" id=\"Debug\" order=\"3\" weight=\"0.4\" />\n      <window_info anchor=\"bottom\" id=\"Terminal\" order=\"8\" />\n      <window_info anchor=\"bottom\" id=\"Event Log\" order=\"9\" side_tool=\"true\" />\n      <window_info anchor=\"bottom\" id=\"Inspection\" order=\"5\" weight=\"0.4\" />\n      <window_info anchor=\"bottom\" id=\"Version Control\" order=\"10\" />\n      <window_info anchor=\"bottom\" id=\"Message\" order=\"0\" />\n      <window_info id=\"Favorites\" order=\"2\" side_tool=\"true\" />\n    </layout-to-restore>\n  </component>\n  <component name=\"VcsContentAnnotationSettings\">\n    <option name=\"myLimit\" value=\"2678400000\" />\n  </component>\n  <component name=\"editorHistoryManager\">\n    <entry file=\"file://$PROJECT_DIR$/immobilier-mckinsey/src/immo/pipeline.py\">\n      <provider selected=\"true\" editor-type-id=\"text-editor\">\n        <state>\n          <folding>\n            <element signature=\"e#45#68#0\" expanded=\"true\" />\n          </folding>\n        </state>\n      </provider>\n    </entry>\n    <entry file=\"file://$PROJECT_DIR$/immobilier-mckinsey/src/immo/pipelines/data_engineering/nodes.py\">\n      <provider selected=\"true\" editor-type-id=\"text-editor\">\n        <state relative-caret-position=\"255\">\n          <caret line=\"22\" column=\"12\" selection-start-line=\"22\" selection-start-column=\"12\" selection-end-line=\"22\" selection-end-column=\"12\" />\n          <folding>\n            <element signature=\"e#0#11#0\" expanded=\"true\" />\n          </folding>\n        </state>\n      </provider>\n    </entry>\n    <entry file=\"file://$PROJECT_DIR$/immobilier-mckinsey/kedro_cli.py\">\n      <provider selected=\"true\" editor-type-id=\"text-editor\" />\n    </entry>\n    <entry file=\"file://$PROJECT_DIR$/immobilier-mckinsey/src/requirements.txt\">\n      <provider selected=\"true\" editor-type-id=\"text-editor\" />\n    </entry>\n    <entry file=\"file://$PROJECT_DIR$/immobilier-mckinsey/src/immo/pipelines/data_engineering/pipeline.py\">\n      <provider selected=\"true\" editor-type-id=\"text-editor\">\n        <state>\n          <folding>\n            <element signature=\"e#0#41#0\" expanded=\"true\" />\n          </folding>\n        </state>\n      </provider>\n    </entry>\n    <entry file=\"file://$PROJECT_DIR$/immobilier-mckinsey/src/immo/run.py\">\n      <provider selected=\"true\" editor-type-id=\"text-editor\">\n        <state>\n          <folding>\n            <element signature=\"e#1458#1482#0\" expanded=\"true\" />\n          </folding>\n        </state>\n      </provider>\n    </entry>\n    <entry file=\"file://$PROJECT_DIR$/immobilier-mckinsey/src/immo/pipeline.py\">\n      <provider selected=\"true\" editor-type-id=\"text-editor\" />\n    </entry>\n    <entry file=\"file://$PROJECT_DIR$/immobilier-mckinsey/src/immo/pipelines/data_engineering/nodes.py\">\n      <provider selected=\"true\" editor-type-id=\"text-editor\">\n        <state relative-caret-position=\"255\">\n          <caret line=\"22\" column=\"12\" lean-forward=\"true\" selection-start-line=\"22\" selection-start-column=\"12\" selection-end-line=\"22\" selection-end-column=\"12\" />\n          <folding>\n            <element signature=\"e#0#11#0\" expanded=\"true\" />\n          </folding>\n        </state>\n      </provider>\n    </entry>\n    <entry file=\"file://$PROJECT_DIR$/immobilier-mckinsey/kedro_cli.py\">\n      <provider selected=\"true\" editor-type-id=\"text-editor\" />\n    </entry>\n    <entry file=\"file://$PROJECT_DIR$/immobilier-mckinsey/src/requirements.txt\">\n      <provider selected=\"true\" editor-type-id=\"text-editor\" />\n    </entry>\n    <entry file=\"file://$PROJECT_DIR$/immobilier-mckinsey/src/immo/pipelines/data_engineering/pipeline.py\">\n      <provider selected=\"true\" editor-type-id=\"text-editor\" />\n    </entry>\n    <entry file=\"file://$PROJECT_DIR$/immobilier-mckinsey/src/immo/run.py\">\n      <provider selected=\"true\" editor-type-id=\"text-editor\">\n        <state>\n          <folding>\n            <element signature=\"e#1458#1482#0\" expanded=\"true\" />\n          </folding>\n        </state>\n      </provider>\n    </entry>\n    <entry file=\"file://$PROJECT_DIR$/immobilier-mckinsey/kedro_cli.py\">\n      <provider selected=\"true\" editor-type-id=\"text-editor\" />\n    </entry>\n    <entry file=\"file://$PROJECT_DIR$/immobilier-mckinsey/.kedro.yml\">\n      <provider selected=\"true\" editor-type-id=\"text-editor\" />\n    </entry>\n    <entry file=\"file://$PROJECT_DIR$/immobilier-mckinsey/src/immo/run.py\">\n      <provider selected=\"true\" editor-type-id=\"text-editor\">\n        <state relative-caret-position=\"-485\">\n          <folding>\n            <element signature=\"e#1458#1482#0\" expanded=\"true\" />\n          </folding>\n        </state>\n      </provider>\n    </entry>\n    <entry file=\"file://$PROJECT_DIR$/immobilier-mckinsey/ML-I_Data_preparation.ipynb\">\n      <provider selected=\"true\" editor-type-id=\"ipnb-editor\">\n        <state>\n          <selected id=\"0\" />\n        </state>\n      </provider>\n    </entry>\n    <entry file=\"file://$PROJECT_DIR$/separateur_cadastre.py\">\n      <provider selected=\"true\" editor-type-id=\"text-editor\">\n        <state>\n          <folding>\n            <element signature=\"e#0#19#0\" expanded=\"true\" />\n          </folding>\n        </state>\n      </provider>\n    </entry>\n    <entry file=\"file://$PROJECT_DIR$/ruler.py\">\n      <provider selected=\"true\" editor-type-id=\"text-editor\">\n        <state relative-caret-position=\"-1224\">\n          <folding>\n            <element signature=\"e#0#18#0\" expanded=\"true\" />\n          </folding>\n        </state>\n      </provider>\n    </entry>\n    <entry file=\"file://$PROJECT_DIR$/normalisation_et_stop_words.py\">\n      <provider selected=\"true\" editor-type-id=\"text-editor\">\n        <state relative-caret-position=\"-1\">\n          <folding>\n            <element signature=\"e#21#31#0\" expanded=\"true\" />\n          </folding>\n        </state>\n      </provider>\n    </entry>\n    <entry file=\"file://$PROJECT_DIR$/rajout_prix_m2.py\">\n      <provider selected=\"true\" editor-type-id=\"text-editor\">\n        <state>\n          <folding>\n            <element signature=\"e#0#19#0\" expanded=\"true\" />\n          </folding>\n        </state>\n      </provider>\n    </entry>\n    <entry file=\"file://$PROJECT_DIR$/Nodes_McKinsey.py\">\n      <provider selected=\"true\" editor-type-id=\"text-editor\">\n        <state>\n          <folding>\n            <element signature=\"e#0#19#0\" expanded=\"true\" />\n          </folding>\n        </state>\n      </provider>\n    </entry>\n    <entry file=\"file://$PROJECT_DIR$/merger_cadastre_VF.py\">\n      <provider selected=\"true\" editor-type-id=\"text-editor\">\n        <state>\n          <folding>\n            <element signature=\"e#0#19#0\" expanded=\"true\" />\n          </folding>\n        </state>\n      </provider>\n    </entry>\n    <entry file=\"file://$PROJECT_DIR$/merger.py\">\n      <provider selected=\"true\" editor-type-id=\"text-editor\">\n        <state relative-caret-position=\"-125\">\n          <folding>\n            <element signature=\"e#0#19#0\" expanded=\"true\" />\n          </folding>\n        </state>\n      </provider>\n    </entry>\n    <entry file=\"file://$PROJECT_DIR$/corr_type_voie_VF.py\">\n      <provider selected=\"true\" editor-type-id=\"text-editor\">\n        <state relative-caret-position=\"-128\">\n          <folding>\n            <element signature=\"e#0#19#0\" expanded=\"true\" />\n          </folding>\n        </state>\n      </provider>\n    </entry>\n    <entry file=\"file://$PROJECT_DIR$/compareadresse.py\">\n      <provider selected=\"true\" editor-type-id=\"text-editor\">\n        <state relative-caret-position=\"-669\">\n          <folding>\n            <element signature=\"e#0#10#0\" expanded=\"true\" />\n          </folding>\n        </state>\n      </provider>\n    </entry>\n    <entry file=\"file://$PROJECT_DIR$/immobilier-mckinsey/src/immo/pipelines/data_engineering/nodes.py\">\n      <provider selected=\"true\" editor-type-id=\"text-editor\">\n        <state relative-caret-position=\"289\">\n          <caret line=\"17\" column=\"22\" selection-start-line=\"17\" selection-start-column=\"22\" selection-end-line=\"17\" selection-end-column=\"22\" />\n          <folding>\n            <element signature=\"e#0#11#0\" expanded=\"true\" />\n          </folding>\n        </state>\n      </provider>\n    </entry>\n    <entry file=\"file://$PROJECT_DIR$/immobilier-mckinsey/.gitignore\">\n      <provider selected=\"true\" editor-type-id=\"text-editor\" />\n    </entry>\n    <entry file=\"file://$PROJECT_DIR$/immobilier-mckinsey/data/01_raw/valeursfoncieres-2014.txt\">\n      <provider selected=\"true\" editor-type-id=\"LargeFileEditor\">\n        <state>\n          <caret column=\"224\" selection-start-column=\"208\" selection-end-column=\"224\" />\n        </state>\n      </provider>\n    </entry>\n    <entry file=\"file://$PROJECT_DIR$/immobilier-mckinsey/src/immo/pipelines/data_engineering/pipeline.py\">\n      <provider selected=\"true\" editor-type-id=\"text-editor\">\n        <state relative-caret-position=\"204\">\n          <caret line=\"12\" column=\"31\" selection-start-line=\"12\" selection-start-column=\"31\" selection-end-line=\"12\" selection-end-column=\"31\" />\n          <folding>\n            <element signature=\"e#0#41#0\" expanded=\"true\" />\n          </folding>\n        </state>\n      </provider>\n    </entry>\n    <entry file=\"file://$PROJECT_DIR$/immobilier-mckinsey/data/01_raw/adresses-cadastre-75.csv\">\n      <provider selected=\"true\" editor-type-id=\"text-editor\">\n        <state>\n          <caret selection-end-column=\"11\" />\n        </state>\n      </provider>\n    </entry>\n    <entry file=\"file://$PROJECT_DIR$/immobilier-mckinsey/conf/base/logging.yml\">\n      <provider selected=\"true\" editor-type-id=\"text-editor\">\n        <state relative-caret-position=\"-153\" />\n      </provider>\n    </entry>\n    <entry file=\"file://$PROJECT_DIR$/immobilier-mckinsey/conf/base/parameters.yml\">\n      <provider selected=\"true\" editor-type-id=\"text-editor\" />\n    </entry>\n    <entry file=\"file://$PROJECT_DIR$/immobilier-mckinsey/conf/base/catalog.yml\">\n      <provider selected=\"true\" editor-type-id=\"text-editor\">\n        <state relative-caret-position=\"756\">\n          <caret line=\"46\" column=\"43\" selection-start-line=\"44\" selection-start-column=\"2\" selection-end-line=\"46\" selection-end-column=\"43\" />\n        </state>\n      </provider>\n    </entry>\n    <entry file=\"file://$PROJECT_DIR$/immobilier-mckinsey/src/requirements.txt\">\n      <provider selected=\"true\" editor-type-id=\"text-editor\">\n        <state relative-caret-position=\"-918\" />\n      </provider>\n    </entry>\n    <entry file=\"file://$PROJECT_DIR$/immobilier-mckinsey/src/immo/pipeline.py\">\n      <provider selected=\"true\" editor-type-id=\"text-editor\">\n        <state relative-caret-position=\"272\">\n          <caret line=\"16\" selection-start-line=\"16\" selection-end-line=\"16\" />\n          <folding>\n            <element signature=\"e#45#68#0\" expanded=\"true\" />\n          </folding>\n        </state>\n      </provider>\n    </entry>\n    <entry file=\"file://$PROJECT_DIR$/immobilier-mckinsey/src/tests/test_run.py\">\n      <provider selected=\"true\" editor-type-id=\"text-editor\">\n        <state relative-caret-position=\"507\">\n          <caret line=\"51\" column=\"68\" lean-forward=\"true\" selection-start-line=\"51\" selection-start-column=\"68\" selection-end-line=\"51\" selection-end-column=\"68\" />\n          <folding>\n            <element signature=\"e#1704#1728#0\" expanded=\"true\" />\n          </folding>\n        </state>\n      </provider>\n    </entry>\n    <entry file=\"file://$PROJECT_DIR$/test/src/testpack/pipeline.py\">\n      <provider selected=\"true\" editor-type-id=\"text-editor\">\n        <state relative-caret-position=\"-508\">\n          <folding>\n            <element signature=\"e#1472#1495#0\" expanded=\"true\" />\n          </folding>\n        </state>\n      </provider>\n    </entry>\n    <entry file=\"file://$PROJECT_DIR$/test/src/testpack/pipelines/data_engineering/nodes.py\">\n      <provider selected=\"true\" editor-type-id=\"text-editor\">\n        <state relative-caret-position=\"-407\">\n          <folding>\n            <element signature=\"e#1618#1646#0\" expanded=\"true\" />\n          </folding>\n        </state>\n      </provider>\n    </entry>\n    <entry file=\"file://$PROJECT_DIR$/test/src/testpack/pipelines/data_engineering/pipeline.py\">\n      <provider selected=\"true\" editor-type-id=\"text-editor\">\n        <state relative-caret-position=\"248\">\n          <caret line=\"34\" selection-start-line=\"34\" selection-end-line=\"34\" />\n          <folding>\n            <element signature=\"e#1613#1654#0\" expanded=\"true\" />\n          </folding>\n        </state>\n      </provider>\n    </entry>\n    <entry file=\"file://$PROJECT_DIR$/test/conf/base/catalog.yml\">\n      <provider selected=\"true\" editor-type-id=\"text-editor\">\n        <state relative-caret-position=\"-298\" />\n      </provider>\n    </entry>\n    <entry file=\"file://$PROJECT_DIR$/test/conf/base/credentials.yml\">\n      <provider selected=\"true\" editor-type-id=\"text-editor\" />\n    </entry>\n    <entry file=\"file://$PROJECT_DIR$/test/conf/base/logging.yml\">\n      <provider selected=\"true\" editor-type-id=\"text-editor\">\n        <state relative-caret-position=\"-459\" />\n      </provider>\n    </entry>\n    <entry file=\"file://$PROJECT_DIR$/test/conf/base/parameters.yml\">\n      <provider selected=\"true\" editor-type-id=\"text-editor\" />\n    </entry>\n  </component>\n</project>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- .idea/workspace.xml	(revision 9e5ff9e04c6fb723e76f970a6c302dc10594417a)
++++ .idea/workspace.xml	(date 1589535723397)
+@@ -1,220 +1,67 @@
+ <?xml version="1.0" encoding="UTF-8"?>
+ <project version="4">
++  <component name="BranchesTreeState">
++    <expand>
++      <path>
++        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
++        <item name="LOCAL_ROOT" type="e8cecc67:BranchNodeDescriptor" />
++      </path>
++      <path>
++        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
++        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
++      </path>
++      <path>
++        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
++        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
++        <item name="GROUP_NODE:origin" type="e8cecc67:BranchNodeDescriptor" />
++      </path>
++    </expand>
++    <select>
++      <path>
++        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
++        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
++        <item name="GROUP_NODE:origin" type="e8cecc67:BranchNodeDescriptor" />
++        <item name="BRANCH:origin/scripts_clean" type="e8cecc67:BranchNodeDescriptor" />
++      </path>
++    </select>
++  </component>
+   <component name="ChangeListManager">
+     <list default="true" id="e5a2c5ed-14ca-4ecd-b67e-c4c3a8288231" name="Default" comment="">
++      <change beforePath="$PROJECT_DIR$/.idea/Projet_Housing_McKinsey_S2.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/Projet_Housing_McKinsey_S2.iml" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+       <change beforePath="$PROJECT_DIR$/immobilier-mckinsey/conf/base/catalog.yml" beforeDir="false" afterPath="$PROJECT_DIR$/immobilier-mckinsey/conf/base/catalog.yml" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/immobilier-mckinsey/src/immo/pipeline.py" beforeDir="false" afterPath="$PROJECT_DIR$/immobilier-mckinsey/src/immo/pipeline.py" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/immobilier-mckinsey/src/immo/pipelines/data_engineering/global_variables.py" beforeDir="false" afterPath="$PROJECT_DIR$/immobilier-mckinsey/src/immo/pipelines/data_engineering/global_variables.py" afterDir="false" />
+       <change beforePath="$PROJECT_DIR$/immobilier-mckinsey/src/immo/pipelines/data_engineering/nodes.py" beforeDir="false" afterPath="$PROJECT_DIR$/immobilier-mckinsey/src/immo/pipelines/data_engineering/nodes.py" afterDir="false" />
+       <change beforePath="$PROJECT_DIR$/immobilier-mckinsey/src/immo/pipelines/data_engineering/pipeline.py" beforeDir="false" afterPath="$PROJECT_DIR$/immobilier-mckinsey/src/immo/pipelines/data_engineering/pipeline.py" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/merge_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/merge_utils.py" afterDir="false" />
+     </list>
+-    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
+-    <option name="TRACKING_ENABLED" value="true" />
+     <option name="SHOW_DIALOG" value="false" />
+     <option name="HIGHLIGHT_CONFLICTS" value="true" />
+     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+     <option name="LAST_RESOLUTION" value="IGNORE" />
+-  </component>
+-  <component name="FileEditorManager">
+-    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
+-      <file leaf-file-name="pipeline.py" pinned="false" current-in-tab="false">
+-        <entry file="file://$PROJECT_DIR$/immobilier-mckinsey/src/immo/pipeline.py">
+-          <provider selected="true" editor-type-id="text-editor">
+-            <state relative-caret-position="272">
+-              <caret line="16" selection-start-line="16" selection-end-line="16" />
+-              <folding>
+-                <element signature="e#45#68#0" expanded="true" />
+-              </folding>
+-            </state>
+-          </provider>
+-        </entry>
+-      </file>
+-      <file leaf-file-name="test_run.py" pinned="false" current-in-tab="false">
+-        <entry file="file://$PROJECT_DIR$/immobilier-mckinsey/src/tests/test_run.py">
+-          <provider selected="true" editor-type-id="text-editor">
+-            <state relative-caret-position="507">
+-              <caret line="51" column="68" lean-forward="true" selection-start-line="51" selection-start-column="68" selection-end-line="51" selection-end-column="68" />
+-              <folding>
+-                <element signature="e#1704#1728#0" expanded="true" />
+-              </folding>
+-            </state>
+-          </provider>
+-        </entry>
+-      </file>
+-      <file leaf-file-name="catalog.yml" pinned="false" current-in-tab="false">
+-        <entry file="file://$PROJECT_DIR$/test/conf/base/catalog.yml">
+-          <provider selected="true" editor-type-id="text-editor">
+-            <state relative-caret-position="-298" />
+-          </provider>
+-        </entry>
+-      </file>
+-      <file leaf-file-name="credentials.yml" pinned="false" current-in-tab="false">
+-        <entry file="file://$PROJECT_DIR$/test/conf/base/credentials.yml">
+-          <provider selected="true" editor-type-id="text-editor" />
+-        </entry>
+-      </file>
+-      <file leaf-file-name="logging.yml" pinned="false" current-in-tab="false">
+-        <entry file="file://$PROJECT_DIR$/test/conf/base/logging.yml">
+-          <provider selected="true" editor-type-id="text-editor">
+-            <state relative-caret-position="-459" />
+-          </provider>
+-        </entry>
+-      </file>
+-      <file leaf-file-name="pipeline.py" pinned="false" current-in-tab="false">
+-        <entry file="file://$PROJECT_DIR$/test/src/testpack/pipeline.py">
+-          <provider selected="true" editor-type-id="text-editor">
+-            <state relative-caret-position="-508">
+-              <folding>
+-                <element signature="e#1472#1495#0" expanded="true" />
+-              </folding>
+-            </state>
+-          </provider>
+-        </entry>
+-      </file>
+-      <file leaf-file-name="pipeline.py" pinned="false" current-in-tab="false">
+-        <entry file="file://$PROJECT_DIR$/test/src/testpack/pipelines/data_engineering/pipeline.py">
+-          <provider selected="true" editor-type-id="text-editor">
+-            <state relative-caret-position="248">
+-              <caret line="34" selection-start-line="34" selection-end-line="34" />
+-              <folding>
+-                <element signature="e#1613#1654#0" expanded="true" />
+-              </folding>
+-            </state>
+-          </provider>
+-        </entry>
+-      </file>
+-      <file leaf-file-name="nodes.py" pinned="false" current-in-tab="false">
+-        <entry file="file://$PROJECT_DIR$/test/src/testpack/pipelines/data_engineering/nodes.py">
+-          <provider selected="true" editor-type-id="text-editor">
+-            <state relative-caret-position="-407">
+-              <folding>
+-                <element signature="e#1618#1646#0" expanded="true" />
+-              </folding>
+-            </state>
+-          </provider>
+-        </entry>
+-      </file>
+-      <file leaf-file-name="parameters.yml" pinned="false" current-in-tab="true">
+-        <entry file="file://$PROJECT_DIR$/test/conf/base/parameters.yml">
+-          <provider selected="true" editor-type-id="text-editor" />
+-        </entry>
+-      </file>
+-      <file leaf-file-name="requirements.txt" pinned="false" current-in-tab="false">
+-        <entry file="file://$PROJECT_DIR$/immobilier-mckinsey/src/requirements.txt">
+-          <provider selected="true" editor-type-id="text-editor">
+-            <state relative-caret-position="-918" />
+-          </provider>
+-        </entry>
+-      </file>
+-    </leaf>
+   </component>
+   <component name="Git.Settings">
+-    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+-  </component>
+-  <component name="IdeDocumentHistory">
+-    <option name="CHANGED_PATHS">
+-      <list>
+-        <option value="$PROJECT_DIR$/immobilier-mckinsey/src/immo/pipelines/data_engineering/nodes.py" />
+-        <option value="$PROJECT_DIR$/immobilier-mckinsey/src/immo/pipeline.py" />
+-        <option value="$PROJECT_DIR$/immobilier-mckinsey/src/immo/pipelines/data_engineering/pipeline.py" />
+-        <option value="$PROJECT_DIR$/immobilier-mckinsey/conf/base/catalog.yml" />
+-      </list>
++    <option name="RECENT_BRANCH_BY_REPOSITORY">
++      <map>
++        <entry key="$PROJECT_DIR$" value="scripts_clean" />
++      </map>
+     </option>
++    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+   </component>
+   <component name="ProjectFrameBounds" extendedState="6">
+     <option name="x" value="465" />
+     <option name="width" value="1170" />
+     <option name="height" value="820" />
+   </component>
+-  <component name="ProjectView">
+-    <navigator proportions="" version="1">
+-      <foldersAlwaysOnTop value="true" />
+-    </navigator>
+-    <panes>
+-      <pane id="Scope" />
+-      <pane id="ProjectPane">
+-        <subPane>
+-          <expand>
+-            <path>
+-              <item name="Projet_Housing_McKinsey_S2" type="b2602c69:ProjectViewProjectNode" />
+-              <item name="Projet_Housing_McKinsey_S2" type="462c0819:PsiDirectoryNode" />
+-            </path>
+-            <path>
+-              <item name="Projet_Housing_McKinsey_S2" type="b2602c69:ProjectViewProjectNode" />
+-              <item name="Projet_Housing_McKinsey_S2" type="462c0819:PsiDirectoryNode" />
+-              <item name="test" type="462c0819:PsiDirectoryNode" />
+-            </path>
+-            <path>
+-              <item name="Projet_Housing_McKinsey_S2" type="b2602c69:ProjectViewProjectNode" />
+-              <item name="Projet_Housing_McKinsey_S2" type="462c0819:PsiDirectoryNode" />
+-              <item name="test" type="462c0819:PsiDirectoryNode" />
+-              <item name="conf" type="462c0819:PsiDirectoryNode" />
+-            </path>
+-            <path>
+-              <item name="Projet_Housing_McKinsey_S2" type="b2602c69:ProjectViewProjectNode" />
+-              <item name="Projet_Housing_McKinsey_S2" type="462c0819:PsiDirectoryNode" />
+-              <item name="test" type="462c0819:PsiDirectoryNode" />
+-              <item name="conf" type="462c0819:PsiDirectoryNode" />
+-              <item name="base" type="462c0819:PsiDirectoryNode" />
+-            </path>
+-            <path>
+-              <item name="Projet_Housing_McKinsey_S2" type="b2602c69:ProjectViewProjectNode" />
+-              <item name="Projet_Housing_McKinsey_S2" type="462c0819:PsiDirectoryNode" />
+-              <item name="test" type="462c0819:PsiDirectoryNode" />
+-              <item name="src" type="462c0819:PsiDirectoryNode" />
+-            </path>
+-            <path>
+-              <item name="Projet_Housing_McKinsey_S2" type="b2602c69:ProjectViewProjectNode" />
+-              <item name="Projet_Housing_McKinsey_S2" type="462c0819:PsiDirectoryNode" />
+-              <item name="test" type="462c0819:PsiDirectoryNode" />
+-              <item name="src" type="462c0819:PsiDirectoryNode" />
+-              <item name="testpack" type="462c0819:PsiDirectoryNode" />
+-            </path>
+-            <path>
+-              <item name="Projet_Housing_McKinsey_S2" type="b2602c69:ProjectViewProjectNode" />
+-              <item name="Projet_Housing_McKinsey_S2" type="462c0819:PsiDirectoryNode" />
+-              <item name="test" type="462c0819:PsiDirectoryNode" />
+-              <item name="src" type="462c0819:PsiDirectoryNode" />
+-              <item name="testpack" type="462c0819:PsiDirectoryNode" />
+-              <item name="pipelines" type="462c0819:PsiDirectoryNode" />
+-            </path>
+-            <path>
+-              <item name="Projet_Housing_McKinsey_S2" type="b2602c69:ProjectViewProjectNode" />
+-              <item name="Projet_Housing_McKinsey_S2" type="462c0819:PsiDirectoryNode" />
+-              <item name="test" type="462c0819:PsiDirectoryNode" />
+-              <item name="src" type="462c0819:PsiDirectoryNode" />
+-              <item name="testpack" type="462c0819:PsiDirectoryNode" />
+-              <item name="pipelines" type="462c0819:PsiDirectoryNode" />
+-              <item name="data_engineering" type="462c0819:PsiDirectoryNode" />
+-            </path>
+-            <path>
+-              <item name="Projet_Housing_McKinsey_S2" type="b2602c69:ProjectViewProjectNode" />
+-              <item name="Projet_Housing_McKinsey_S2" type="462c0819:PsiDirectoryNode" />
+-              <item name="test" type="462c0819:PsiDirectoryNode" />
+-              <item name="src" type="462c0819:PsiDirectoryNode" />
+-              <item name="testpack" type="462c0819:PsiDirectoryNode" />
+-              <item name="pipelines" type="462c0819:PsiDirectoryNode" />
+-              <item name="data_science" type="462c0819:PsiDirectoryNode" />
+-            </path>
+-          </expand>
+-          <select />
+-        </subPane>
+-      </pane>
+-    </panes>
++  <component name="ProjectId" id="1bw5S1jgfTXB6khJbGr0pJq7P8h" />
++  <component name="ProjectViewState">
++    <option name="hideEmptyMiddlePackages" value="true" />
++    <option name="showLibraryContents" value="true" />
+   </component>
+   <component name="PropertiesComponent">
+     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+-  </component>
+-  <component name="RunDashboard">
+-    <option name="ruleStates">
+-      <list>
+-        <RuleState>
+-          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
+-        </RuleState>
+-        <RuleState>
+-          <option name="name" value="StatusDashboardGroupingRule" />
+-        </RuleState>
+-      </list>
+-    </option>
++    <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
+   </component>
+   <component name="SvnConfiguration">
+     <configuration />
+@@ -229,349 +76,41 @@
+     </task>
+     <servers />
+   </component>
+-  <component name="ToolWindowManager">
+-    <frame x="-7" y="-7" width="1550" height="838" extended-state="6" />
+-    <editor active="true" />
+-    <layout>
+-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.25" />
+-      <window_info anchor="bottom" id="TODO" order="6" />
+-      <window_info anchor="bottom" id="Event Log" order="7" side_tool="true" />
+-      <window_info anchor="bottom" id="Run" order="2" />
+-      <window_info anchor="bottom" id="Version Control" order="7" />
+-      <window_info anchor="bottom" id="Python Console" order="7" />
+-      <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
+-      <window_info anchor="bottom" id="Terminal" order="7" />
+-      <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
+-      <window_info id="Favorites" order="2" side_tool="true" />
+-      <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
+-      <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
+-      <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
+-      <window_info anchor="bottom" id="Message" order="0" />
+-      <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
+-      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
+-      <window_info anchor="bottom" id="Find" order="1" />
+-    </layout>
+-    <layout-to-restore>
+-      <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
+-      <window_info anchor="bottom" id="Run" order="2" />
+-      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
+-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.25" />
+-      <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
+-      <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
+-      <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
+-      <window_info anchor="bottom" id="TODO" order="6" />
+-      <window_info anchor="bottom" id="Find" order="1" />
+-      <window_info anchor="bottom" id="Python Console" order="7" />
+-      <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
+-      <window_info anchor="bottom" id="Terminal" order="8" />
+-      <window_info anchor="bottom" id="Event Log" order="9" side_tool="true" />
+-      <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
+-      <window_info anchor="bottom" id="Version Control" order="10" />
+-      <window_info anchor="bottom" id="Message" order="0" />
+-      <window_info id="Favorites" order="2" side_tool="true" />
+-    </layout-to-restore>
+-  </component>
+-  <component name="VcsContentAnnotationSettings">
+-    <option name="myLimit" value="2678400000" />
+-  </component>
+-  <component name="editorHistoryManager">
+-    <entry file="file://$PROJECT_DIR$/immobilier-mckinsey/src/immo/pipeline.py">
+-      <provider selected="true" editor-type-id="text-editor">
+-        <state>
+-          <folding>
+-            <element signature="e#45#68#0" expanded="true" />
+-          </folding>
+-        </state>
+-      </provider>
+-    </entry>
+-    <entry file="file://$PROJECT_DIR$/immobilier-mckinsey/src/immo/pipelines/data_engineering/nodes.py">
+-      <provider selected="true" editor-type-id="text-editor">
+-        <state relative-caret-position="255">
+-          <caret line="22" column="12" selection-start-line="22" selection-start-column="12" selection-end-line="22" selection-end-column="12" />
+-          <folding>
+-            <element signature="e#0#11#0" expanded="true" />
+-          </folding>
+-        </state>
+-      </provider>
+-    </entry>
+-    <entry file="file://$PROJECT_DIR$/immobilier-mckinsey/kedro_cli.py">
+-      <provider selected="true" editor-type-id="text-editor" />
+-    </entry>
+-    <entry file="file://$PROJECT_DIR$/immobilier-mckinsey/src/requirements.txt">
+-      <provider selected="true" editor-type-id="text-editor" />
+-    </entry>
+-    <entry file="file://$PROJECT_DIR$/immobilier-mckinsey/src/immo/pipelines/data_engineering/pipeline.py">
+-      <provider selected="true" editor-type-id="text-editor">
+-        <state>
+-          <folding>
+-            <element signature="e#0#41#0" expanded="true" />
+-          </folding>
+-        </state>
+-      </provider>
+-    </entry>
+-    <entry file="file://$PROJECT_DIR$/immobilier-mckinsey/src/immo/run.py">
+-      <provider selected="true" editor-type-id="text-editor">
+-        <state>
+-          <folding>
+-            <element signature="e#1458#1482#0" expanded="true" />
+-          </folding>
+-        </state>
+-      </provider>
+-    </entry>
+-    <entry file="file://$PROJECT_DIR$/immobilier-mckinsey/src/immo/pipeline.py">
+-      <provider selected="true" editor-type-id="text-editor" />
+-    </entry>
+-    <entry file="file://$PROJECT_DIR$/immobilier-mckinsey/src/immo/pipelines/data_engineering/nodes.py">
+-      <provider selected="true" editor-type-id="text-editor">
+-        <state relative-caret-position="255">
+-          <caret line="22" column="12" lean-forward="true" selection-start-line="22" selection-start-column="12" selection-end-line="22" selection-end-column="12" />
+-          <folding>
+-            <element signature="e#0#11#0" expanded="true" />
+-          </folding>
+-        </state>
+-      </provider>
+-    </entry>
+-    <entry file="file://$PROJECT_DIR$/immobilier-mckinsey/kedro_cli.py">
+-      <provider selected="true" editor-type-id="text-editor" />
+-    </entry>
+-    <entry file="file://$PROJECT_DIR$/immobilier-mckinsey/src/requirements.txt">
+-      <provider selected="true" editor-type-id="text-editor" />
+-    </entry>
+-    <entry file="file://$PROJECT_DIR$/immobilier-mckinsey/src/immo/pipelines/data_engineering/pipeline.py">
+-      <provider selected="true" editor-type-id="text-editor" />
+-    </entry>
+-    <entry file="file://$PROJECT_DIR$/immobilier-mckinsey/src/immo/run.py">
+-      <provider selected="true" editor-type-id="text-editor">
+-        <state>
+-          <folding>
+-            <element signature="e#1458#1482#0" expanded="true" />
+-          </folding>
+-        </state>
+-      </provider>
+-    </entry>
+-    <entry file="file://$PROJECT_DIR$/immobilier-mckinsey/kedro_cli.py">
+-      <provider selected="true" editor-type-id="text-editor" />
+-    </entry>
+-    <entry file="file://$PROJECT_DIR$/immobilier-mckinsey/.kedro.yml">
+-      <provider selected="true" editor-type-id="text-editor" />
+-    </entry>
+-    <entry file="file://$PROJECT_DIR$/immobilier-mckinsey/src/immo/run.py">
+-      <provider selected="true" editor-type-id="text-editor">
+-        <state relative-caret-position="-485">
+-          <folding>
+-            <element signature="e#1458#1482#0" expanded="true" />
+-          </folding>
+-        </state>
+-      </provider>
+-    </entry>
+-    <entry file="file://$PROJECT_DIR$/immobilier-mckinsey/ML-I_Data_preparation.ipynb">
+-      <provider selected="true" editor-type-id="ipnb-editor">
+-        <state>
+-          <selected id="0" />
+-        </state>
+-      </provider>
+-    </entry>
+-    <entry file="file://$PROJECT_DIR$/separateur_cadastre.py">
+-      <provider selected="true" editor-type-id="text-editor">
+-        <state>
+-          <folding>
+-            <element signature="e#0#19#0" expanded="true" />
+-          </folding>
+-        </state>
+-      </provider>
+-    </entry>
+-    <entry file="file://$PROJECT_DIR$/ruler.py">
+-      <provider selected="true" editor-type-id="text-editor">
+-        <state relative-caret-position="-1224">
+-          <folding>
+-            <element signature="e#0#18#0" expanded="true" />
+-          </folding>
+-        </state>
+-      </provider>
+-    </entry>
+-    <entry file="file://$PROJECT_DIR$/normalisation_et_stop_words.py">
+-      <provider selected="true" editor-type-id="text-editor">
+-        <state relative-caret-position="-1">
+-          <folding>
+-            <element signature="e#21#31#0" expanded="true" />
+-          </folding>
+-        </state>
+-      </provider>
+-    </entry>
+-    <entry file="file://$PROJECT_DIR$/rajout_prix_m2.py">
+-      <provider selected="true" editor-type-id="text-editor">
+-        <state>
+-          <folding>
+-            <element signature="e#0#19#0" expanded="true" />
+-          </folding>
+-        </state>
+-      </provider>
+-    </entry>
+-    <entry file="file://$PROJECT_DIR$/Nodes_McKinsey.py">
+-      <provider selected="true" editor-type-id="text-editor">
+-        <state>
+-          <folding>
+-            <element signature="e#0#19#0" expanded="true" />
+-          </folding>
+-        </state>
+-      </provider>
+-    </entry>
+-    <entry file="file://$PROJECT_DIR$/merger_cadastre_VF.py">
+-      <provider selected="true" editor-type-id="text-editor">
+-        <state>
+-          <folding>
+-            <element signature="e#0#19#0" expanded="true" />
+-          </folding>
+-        </state>
+-      </provider>
+-    </entry>
+-    <entry file="file://$PROJECT_DIR$/merger.py">
+-      <provider selected="true" editor-type-id="text-editor">
+-        <state relative-caret-position="-125">
+-          <folding>
+-            <element signature="e#0#19#0" expanded="true" />
+-          </folding>
+-        </state>
+-      </provider>
+-    </entry>
+-    <entry file="file://$PROJECT_DIR$/corr_type_voie_VF.py">
+-      <provider selected="true" editor-type-id="text-editor">
+-        <state relative-caret-position="-128">
+-          <folding>
+-            <element signature="e#0#19#0" expanded="true" />
+-          </folding>
+-        </state>
+-      </provider>
+-    </entry>
+-    <entry file="file://$PROJECT_DIR$/compareadresse.py">
+-      <provider selected="true" editor-type-id="text-editor">
+-        <state relative-caret-position="-669">
+-          <folding>
+-            <element signature="e#0#10#0" expanded="true" />
+-          </folding>
+-        </state>
+-      </provider>
+-    </entry>
+-    <entry file="file://$PROJECT_DIR$/immobilier-mckinsey/src/immo/pipelines/data_engineering/nodes.py">
+-      <provider selected="true" editor-type-id="text-editor">
+-        <state relative-caret-position="289">
+-          <caret line="17" column="22" selection-start-line="17" selection-start-column="22" selection-end-line="17" selection-end-column="22" />
+-          <folding>
+-            <element signature="e#0#11#0" expanded="true" />
+-          </folding>
+-        </state>
+-      </provider>
+-    </entry>
+-    <entry file="file://$PROJECT_DIR$/immobilier-mckinsey/.gitignore">
+-      <provider selected="true" editor-type-id="text-editor" />
+-    </entry>
+-    <entry file="file://$PROJECT_DIR$/immobilier-mckinsey/data/01_raw/valeursfoncieres-2014.txt">
+-      <provider selected="true" editor-type-id="LargeFileEditor">
+-        <state>
+-          <caret column="224" selection-start-column="208" selection-end-column="224" />
+-        </state>
+-      </provider>
+-    </entry>
+-    <entry file="file://$PROJECT_DIR$/immobilier-mckinsey/src/immo/pipelines/data_engineering/pipeline.py">
+-      <provider selected="true" editor-type-id="text-editor">
+-        <state relative-caret-position="204">
+-          <caret line="12" column="31" selection-start-line="12" selection-start-column="31" selection-end-line="12" selection-end-column="31" />
+-          <folding>
+-            <element signature="e#0#41#0" expanded="true" />
+-          </folding>
+-        </state>
+-      </provider>
+-    </entry>
+-    <entry file="file://$PROJECT_DIR$/immobilier-mckinsey/data/01_raw/adresses-cadastre-75.csv">
+-      <provider selected="true" editor-type-id="text-editor">
+-        <state>
+-          <caret selection-end-column="11" />
+-        </state>
+-      </provider>
+-    </entry>
+-    <entry file="file://$PROJECT_DIR$/immobilier-mckinsey/conf/base/logging.yml">
+-      <provider selected="true" editor-type-id="text-editor">
+-        <state relative-caret-position="-153" />
+-      </provider>
+-    </entry>
+-    <entry file="file://$PROJECT_DIR$/immobilier-mckinsey/conf/base/parameters.yml">
+-      <provider selected="true" editor-type-id="text-editor" />
+-    </entry>
+-    <entry file="file://$PROJECT_DIR$/immobilier-mckinsey/conf/base/catalog.yml">
+-      <provider selected="true" editor-type-id="text-editor">
+-        <state relative-caret-position="756">
+-          <caret line="46" column="43" selection-start-line="44" selection-start-column="2" selection-end-line="46" selection-end-column="43" />
+-        </state>
+-      </provider>
+-    </entry>
+-    <entry file="file://$PROJECT_DIR$/immobilier-mckinsey/src/requirements.txt">
+-      <provider selected="true" editor-type-id="text-editor">
+-        <state relative-caret-position="-918" />
+-      </provider>
+-    </entry>
+-    <entry file="file://$PROJECT_DIR$/immobilier-mckinsey/src/immo/pipeline.py">
+-      <provider selected="true" editor-type-id="text-editor">
+-        <state relative-caret-position="272">
+-          <caret line="16" selection-start-line="16" selection-end-line="16" />
+-          <folding>
+-            <element signature="e#45#68#0" expanded="true" />
+-          </folding>
+-        </state>
+-      </provider>
+-    </entry>
+-    <entry file="file://$PROJECT_DIR$/immobilier-mckinsey/src/tests/test_run.py">
+-      <provider selected="true" editor-type-id="text-editor">
+-        <state relative-caret-position="507">
+-          <caret line="51" column="68" lean-forward="true" selection-start-line="51" selection-start-column="68" selection-end-line="51" selection-end-column="68" />
+-          <folding>
+-            <element signature="e#1704#1728#0" expanded="true" />
+-          </folding>
+-        </state>
+-      </provider>
+-    </entry>
+-    <entry file="file://$PROJECT_DIR$/test/src/testpack/pipeline.py">
+-      <provider selected="true" editor-type-id="text-editor">
+-        <state relative-caret-position="-508">
+-          <folding>
+-            <element signature="e#1472#1495#0" expanded="true" />
+-          </folding>
+-        </state>
+-      </provider>
+-    </entry>
+-    <entry file="file://$PROJECT_DIR$/test/src/testpack/pipelines/data_engineering/nodes.py">
+-      <provider selected="true" editor-type-id="text-editor">
+-        <state relative-caret-position="-407">
+-          <folding>
+-            <element signature="e#1618#1646#0" expanded="true" />
+-          </folding>
+-        </state>
+-      </provider>
+-    </entry>
+-    <entry file="file://$PROJECT_DIR$/test/src/testpack/pipelines/data_engineering/pipeline.py">
+-      <provider selected="true" editor-type-id="text-editor">
+-        <state relative-caret-position="248">
+-          <caret line="34" selection-start-line="34" selection-end-line="34" />
+-          <folding>
+-            <element signature="e#1613#1654#0" expanded="true" />
+-          </folding>
+-        </state>
+-      </provider>
+-    </entry>
+-    <entry file="file://$PROJECT_DIR$/test/conf/base/catalog.yml">
+-      <provider selected="true" editor-type-id="text-editor">
+-        <state relative-caret-position="-298" />
+-      </provider>
+-    </entry>
+-    <entry file="file://$PROJECT_DIR$/test/conf/base/credentials.yml">
+-      <provider selected="true" editor-type-id="text-editor" />
+-    </entry>
+-    <entry file="file://$PROJECT_DIR$/test/conf/base/logging.yml">
+-      <provider selected="true" editor-type-id="text-editor">
+-        <state relative-caret-position="-459" />
+-      </provider>
+-    </entry>
+-    <entry file="file://$PROJECT_DIR$/test/conf/base/parameters.yml">
+-      <provider selected="true" editor-type-id="text-editor" />
+-    </entry>
++  <component name="Vcs.Log.Tabs.Properties">
++    <option name="TAB_STATES">
++      <map>
++        <entry key="MAIN">
++          <value>
++            <State>
++              <option name="FILTERS">
++                <map>
++                  <entry key="branch">
++                    <value>
++                      <list>
++                        <option value="origin/scripts_clean" />
++                      </list>
++                    </value>
++                  </entry>
++                </map>
++              </option>
++            </State>
++          </value>
++        </entry>
++      </map>
++    </option>
++  </component>
++  <component name="WindowStateProjectService">
++    <state x="304" y="158" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1589531994508">
++      <screen x="0" y="23" width="1680" height="946" />
++    </state>
++    <state x="304" y="158" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.23.1680.946@0.23.1680.946" timestamp="1589531994508" />
++    <state x="341" y="135" key="SettingsEditor" timestamp="1589533990638">
++      <screen x="0" y="23" width="1680" height="946" />
++    </state>
++    <state x="341" y="135" key="SettingsEditor/0.23.1680.946@0.23.1680.946" timestamp="1589533990638" />
++    <state x="100" y="123" width="1480" height="746" key="ShowDiffWithBranchDialog" timestamp="1589531570783">
++      <screen x="0" y="23" width="1680" height="946" />
++    </state>
++    <state x="100" y="123" width="1480" height="746" key="ShowDiffWithBranchDialog/0.23.1680.946@0.23.1680.946" timestamp="1589531570783" />
+   </component>
+ </project>
+\ No newline at end of file

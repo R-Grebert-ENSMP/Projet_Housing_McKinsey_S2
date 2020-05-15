@@ -72,7 +72,7 @@ valeursfoncieres-2018:
 
 adresses-cadastre-75 : 
  type : pandas.CSVDataSet
- filepath: "data/01_raw/Cadastre_75/adresses-cadastre-75.csv"
+ filepath: "data/01_raw/adresses-cadastre-75.csv"
  load_args:
   sep: ';'
 

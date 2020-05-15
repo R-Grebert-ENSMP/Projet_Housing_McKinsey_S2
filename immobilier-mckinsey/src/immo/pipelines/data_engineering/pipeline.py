@@ -33,7 +33,7 @@ def pipeline_merge_arrond_2014( **kwargs):
         ),
 
         node(func=normalisation,
-             inputs='vf_paris',
+             inputs='vf_paris_sqm',
              outputs='vf_paris_normed',
              name='vf_paris_normed'
              ),

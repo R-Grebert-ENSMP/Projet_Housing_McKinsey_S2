@@ -41,31 +41,31 @@
 
 
 valeursfoncieres-2014:
-  type: pandas.TextDataSet
+  type: pandas.CSVDataSet
   filepath: data/01_raw/valeursfoncieres-2014.txt
   load_args:
     sep: '|'
 
 valeursfoncieres-2015:
-  type: pandas.TextDataSet
+  type: pandas.CSVDataSet
   filepath: data/01_raw/valeursfoncieres-2015.txt
   load_args:
     sep: '|'
 
 valeursfoncieres-2016:
-  type: pandas.TextDataSet
+  type: pandas.CSVDataSet
   filepath: data/01_raw/valeursfoncieres-2016.txt
   load_args:
     sep: '|'
 
 valeursfoncieres-2017:
-  type: pandas.TextDataSet
+  type: pandas.CSVDataSet
   filepath: data/01_raw/valeursfoncieres-2017.txt
   load_args:
     sep: '|'
 
 valeursfoncieres-2018:
-  type: pandas.TextDataSet
+  type: pandas.CSVDataSet
   filepath: data/01_raw/valeursfoncieres-2018.txt
   load_args:
     sep: '|'

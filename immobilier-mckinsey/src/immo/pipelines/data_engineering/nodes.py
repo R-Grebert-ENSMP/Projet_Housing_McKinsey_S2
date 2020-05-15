@@ -233,27 +233,40 @@ def corr_type_de_voie_vf(valeur_fonc_df):
     )
     return valeur_fonc_df
 
+def mask_vf(valeur_fonciere):
+    '''
+    This function applies a mask to the dataset in order to extract only the values concerning paris in valeur fonciere
 
-def mask_duplica_vf(df_vf):
+    Args: valeur fonciere (pandas dataframe)
 
-    """
+    Returns: pandas dataframe: only parisian datas
+    '''
 
-    This function selects the Paris lines in the "valeur fonciere" dataframe
-
-    It then groups the parcels sold together (same adress) in a single surface and deletes the useless lines in order to only have one line for each individual parcel under the same adress
-
-
-    """
-    df_paris = pd.DataFrame(columns = df_vf.columns)
+    valeur_fonciere_paris = pd.DataFrame(columns = valeur_fonciere.columns)
     for i in range (75001, 75021):
-        df_paris = master.append(cond(df_vf, 'Code postal', i))
+        valeur_fonciere_paris = pd.concat([valeur_fonciere_paris, cond(valeur_fonciere, i)])
+    return df_paris
 
+def cond(df, arrond):
+    '''
+    This is a small function just to apply the condition on the postal code
+
+    Args:
+        df (dataframe),
+        arrond(int): the value of the borough
+
+    Returns:
+        dataframe with only the selected borough
+    '''
+    return df[df['Code postal'] == arrond]
+
+def mask_duplica_vf(df_paris):
     master = df_paris
     length_paris = len(df_paris.index)
-    master.index = [i for i in range (n)]
+    master.index = [i for i in range (length_paris)]
     C_surface = np.array(master['Surface reelle bati'])
     i = 0
-    while i < n-1:
+    while i < length_paris-1:
         k = 1
         surface_i = master.loc[i]['Surface reelle bati']
         if master.duplicated(['Valeur fonciere', 'Date mutation', 'Section'])[i]:
@@ -263,7 +276,7 @@ def mask_duplica_vf(df_vf):
             C_surface[i] = surface_i
         i += k
     del master['Surface reelle bati']
-    master.insert(38,'Surface reelle bati' ,C_surface)
+    master.insert(38,'Surface reelle bati', C_surface)
     master_f = master.drop_duplicates(['Date mutation', 'Valeur fonciere', 'Section'], keep='first')
     return(get_square_meter_price(master_f)) #On combine get square meter et mask
 

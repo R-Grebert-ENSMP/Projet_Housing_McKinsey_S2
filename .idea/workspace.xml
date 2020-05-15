@@ -27,14 +27,21 @@
   <component name="ChangeListManager">
     <list default="true" id="97f6fdce-c380-4b69-adaa-c5ce8537680a" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/immobilier-mckinsey/src/immo/pipeline.py" beforeDir="false" afterPath="$PROJECT_DIR$/immobilier-mckinsey/src/immo/pipeline.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Codes_selection_paris.py" beforeDir="false" afterPath="$PROJECT_DIR$/Codes_selection_paris.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/immobilier-mckinsey/conf/base/catalog.yml" beforeDir="false" afterPath="$PROJECT_DIR$/immobilier-mckinsey/conf/base/catalog.yml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/immobilier-mckinsey/src/immo/pipelines/data_engineering/nodes.py" beforeDir="false" afterPath="$PROJECT_DIR$/immobilier-mckinsey/src/immo/pipelines/data_engineering/nodes.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/immobilier-mckinsey/src/immo/pipelines/data_engineering/pipeline.py" beforeDir="false" afterPath="$PROJECT_DIR$/immobilier-mckinsey/src/immo/pipelines/data_engineering/pipeline.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -62,6 +69,27 @@
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State>
+              <option name="FILTERS">
+                <map>
+                  <entry key="branch">
+                    <value>
+                      <list>
+                        <option value="comments" />
+                      </list>
+                    </value>
+                  </entry>
+                </map>
+              </option>
+            </State>
+          </value>
+        </entry>
+      </map>
+    </option>
     <option name="oldMeFiltersMigrated" value="true" />
   </component>
 </project>

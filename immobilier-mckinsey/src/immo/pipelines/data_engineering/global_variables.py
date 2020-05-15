@@ -2,7 +2,7 @@
 parameters = {
 # Column Names
 # Valeurs Foncieres table
-"vf_date" = "Date mutation"
+"vf_date" : "Date mutation",
 "vf_street_num" : "No voie",
 "vf_street_name" : "Voie",
 "vf_street_type" : "Type de voie",

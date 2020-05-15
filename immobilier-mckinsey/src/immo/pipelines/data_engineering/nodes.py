@@ -11,44 +11,34 @@ import geopandas
 
 
 
+
+
 # ------------------- Merging Functions ------------------- #
+#------------------------------------------------------------#
 
-#-------------------------------------------------------cleaned
 
-def normalisation(str_err):
+
+def sep_voies(cadastre_df):
     """
-    Function to normalize a string through four steps :
-    - replacing errors related to accents encoding
-    - lowercasing
-    - stop words removal
-    - normalizing common names (place, general, ...) into abbreviations
-    Normalization rules are imported from global variables.py
+    Splits the cad_street_full column in the cadastre into cad_street_type and cad_street name,
+    to match the format in the "valeurs foncieres" table.
 
     Args:
-        str_err (string): the string to normalize
+        cadastre_df (pandas dataframe): the cadastre table
 
     Returns:
-        string: the normalized string
+        pandas dataframe: the cadastre table, with the cad_street_full column,
+        splitted into the cad_street_type and cad_street_name columns.
     """
-    # Replace accents related errors
-    str_accents = str_err
-    for encod_err, encod_corr in parameters["norm_accents"].items():
-        str_accents = str_accents.replace(encod_err, encod_corr)
-    # Lowercase the string
-    str_lower = str_accents.lower()
-    # Remove stop_words
-    str_stopwords = " ".join(
-        [
-            word
-            for word in str_lower.split(" ")
-            if (word not in parameters["stop_words"]) and (len(word) > 0)
-        ]
+    # The pd.DataFrame.apply() method is the best to apply any type of function
+    # It prevents from looping on pd df, which is very costly
+    cadastre_df[parameters["cad_street_type"]] = cadastre_df[parameters["cad_street_full"]].apply(
+        lambda x: x.split(" ")[0]
     )
-    # Abbreviate common names
-    str_abbreviate = str_stopwords
-    for long_name, abbr_name in parameters["norm_abbrevations"].items():
-        str_abbreviate = str_abbreviate.replace(long_name, abbr_name)
-    return str_abbreviate
+    cadastre_df[parameters["cad_street_name"]] = cadastre_df[parameters["cad_street_full"]].apply(
+        lambda x: " ".join(x.split(" ")[1:])
+    )
+    return cadastre_df.drop(parameters["cad_street_full"], axis=1)
 
 
 def compare(
@@ -90,10 +80,13 @@ def compare(
     else:
         return False
 
+
+
 # ------------------- Merger -------------------#
 
-def merger(clean_cadastre, clean_valeur_fonc, columns_merger = [parameters["vf_price_nominal"], parameters["vf_built_area" ],
-parameters["vf_square_meter_price"]], columns_cadastre_compare = [parameters["cad_street_num"],parameters["cad_street_type"],parameters["cad_street_name"]], columns_vf_compare = [parameters["vf_street_num"],parameters["vf_street_type"],parameters["vf_street_name"]]):
+
+
+def merger(clean_cadastre, clean_valeur_fonc, columns_merger = [parameters["vf_price_nominal"], parameters["vf_built_area" ], parameters["vf_square_meter_price"], parameters["vf_date"]], columns_cadastre_compare = [parameters["cad_street_num"],parameters["cad_street_type"],parameters["cad_street_name"]], columns_vf_compare = [parameters["vf_street_num"],parameters["vf_street_type"],parameters["vf_street_name"]]):
 
 
     '''
@@ -155,30 +148,73 @@ parameters["vf_square_meter_price"]], columns_cadastre_compare = [parameters["ca
 
     return master_table_f
 
-# ------------------- Cleaning Functions ------------------- #
 
 
-def sep_voies(cadastre_df):
+def create_master_table(
+   df_2014: pd.DataFrame, df_2015: pd.DataFrame, df_2016: pd.DataFrame, df_2017: pd.DataFrame, df_2018: pd.DataFrame
+) -> pd.DataFrame:
+
+
+    """Combines all data to create a master table.
+
+        Args:
+            df_201i = master table of preprocessed "valeur fonciere" data for the year 201i, already merged with cadastre
+
+
+        Returns:
+            Master table of merged vf from 2014 to 2018 with cadastre
+
     """
-    Splits the cad_street_full column in the cadastre into cad_street_type and cad_street name,
-    to match the format in the "valeurs foncieres" table.
+
+    frames = [df_2014,df_2015,df_2016,df_2017,df_2018]
+    master_table = pd.concat(frames)
+
+    return master_table
+
+
+
+# ------------------- Cleaning Functions ------------------- #
+#------------------------------------------------------------#
+
+
+
+def normalisation(str_err):
+    """
+    Function to normalize a string through four steps :
+    - replacing errors related to accents encoding
+    - lowercasing
+    - stop words removal
+    - normalizing common names (place, general, ...) into abbreviations
+    Normalization rules are imported from global variables.py
 
     Args:
-        cadastre_df (pandas dataframe): the cadastre table
+        str_err (string): the string to normalize
 
     Returns:
-        pandas dataframe: the cadastre table, with the cad_street_full column,
-        splitted into the cad_street_type and cad_street_name columns.
+        string: the normalized string
     """
-    # The pd.DataFrame.apply() method is the best to apply any type of function
-    # It prevents from looping on pd df, which is very costly
-    cadastre_df[parameters["cad_street_type"]] = cadastre_df[parameters["cad_street_full"]].apply(
-        lambda x: x.split(" ")[0]
+    # Replace accents related errors
+    str_accents = str_err
+    for encod_err, encod_corr in parameters["norm_accents"].items():
+        str_accents = str_accents.replace(encod_err, encod_corr)
+    # Lowercase the string
+    str_lower = str_accents.lower()
+    # Remove stop_words
+    str_stopwords = " ".join(
+        [
+            word
+            for word in str_lower.split(" ")
+            if (word not in parameters["stop_words"]) and (len(word) > 0)
+        ]
     )
-    cadastre_df[parameters["cad_street_name"]] = cadastre_df[parameters["cad_street_full"]].apply(
-        lambda x: " ".join(x.split(" ")[1:])
-    )
-    return cadastre_df.drop(parameters["cad_street_full"], axis=1)
+    # Abbreviate common names
+    str_abbreviate = str_stopwords
+    for long_name, abbr_name in parameters["norm_abbrevations"].items():
+        str_abbreviate = str_abbreviate.replace(long_name, abbr_name)
+    return str_abbreviate
+
+
+
 
 
 def corr_type_de_voie_vf(valeur_fonc_df):
@@ -249,7 +285,7 @@ def get_square_meter_price(valeur_fonc_df):
     return valeur_fonc_df
 
 
-#------------------------------------------------------------- not cleaned
+
 
 ##Nous avons finalement décidé de ne pas découper cadastre_75 en arrondissement
 

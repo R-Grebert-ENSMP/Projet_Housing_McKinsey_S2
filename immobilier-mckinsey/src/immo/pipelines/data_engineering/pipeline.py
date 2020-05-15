@@ -2,12 +2,13 @@ from kedro.pipeline import node, Pipeline
 from immo.pipelines.data_engineering.nodes import (
     sep_voies,
     mask_duplica_vf,
-    merger,
     normalisation,
+    merger,
     get_square_meter_price,
     corr_type_de_voie_vf,
 )
-from immo.pipelines.data_engineering.global_variables import parameters
+
+
 
 
 def pipeline_merge_arrond_2014( **kwargs):

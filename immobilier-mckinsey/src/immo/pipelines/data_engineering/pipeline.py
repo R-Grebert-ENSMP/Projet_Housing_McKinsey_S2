@@ -2,9 +2,7 @@ from kedro.pipeline import node, Pipeline
 from immo.pipelines.data_engineering.nodes import (
     sep_voies,
     mask_duplica_vf,
-    cond_filtering_cadastre,
     normalisation,
-    first_digits,
     get_square_meter_price,
     corr_type_de_voie_vf,
 )

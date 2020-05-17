@@ -92,9 +92,13 @@ def compare(
 
 # ------------------- Merger -------------------#
 
-def merger(clean_cadastre, clean_valeur_fonc, columns_merger = [parameters["vf_price_nominal"], parameters["vf_built_area" ],
-parameters["vf_square_meter_price"]], columns_cadastre_compare = [parameters["cad_street_num"],parameters["cad_street_type"],parameters["cad_street_name"]], columns_vf_compare = [parameters["vf_street_num"],parameters["vf_street_type"],parameters["vf_street_name"]]):
-
+def merger(
+        clean_cadastre,
+        clean_valeur_fonc,
+        columns_merger = [parameters["vf_price_nominal"], parameters["vf_built_area" ], parameters["vf_square_meter_price"]],
+        columns_cadastre_compare = [parameters["cad_street_num"], parameters["cad_street_type"], parameters["cad_street_name"]],
+        columns_vf_compare = [parameters["vf_street_num"], parameters["vf_street_type"], parameters["vf_street_name"]]
+        ):
 
     '''
     This fucntion is the final step, it takes the clean table of  cadastre as the scafold, it also needs the name of the
@@ -225,24 +229,40 @@ def cond(df, arrond):
     return df[df['Code postal'] == arrond]
 
 def mask_duplica_vf(df_paris):
-    master = df_paris
+    '''
+    This function takes a valeur_fonciere and it goes looking for every identical lot. Because in vf a real estate lot
+    are devided in multiple lines and to execute our programs we want only one line with one price and one area. Therefore
+    when it finds 2+ lines with the same price, date and section number it adds the area of the lines under to the 1rst one
+    then deletes them ar the very end of the program.
+    To avoid comparing every line I only compare the one where we know there is a duplicate in the DataFrame.
+
+    Args: df_paris (Panda DataFrame only concerning paris)
+
+    Returns: dataframe
+    '''
+    master = df_paris.copy()
     length_paris = len(df_paris.index)
-    master.index = [i for i in range (length_paris)]
-    C_surface = np.array(master['Surface reelle bati'])
+    master.index = [i for i in range (length_paris)] #Re-indexing the lines from 0 to the total number of lines
+    C_surface = np.array(master['Surface reelle bati']) #Creating a new column where the new areas are going to be in
     i = 0
     while i < length_paris-1:
         k = 1
         surface_i = master.loc[i]['Surface reelle bati']
         if master.duplicated(['Valeur fonciere', 'Date mutation', 'Section'])[i]:
-            while master.loc[i]['Section'] == master.loc[i+k]['Section']:
+            #This is to compare only lines where we know a duplicate only on 'Valeur fonciere', 'Date mutation', 'Section' exists
+
+            while master.loc[i]['Section'] == master.loc[i+k]['Section']:#If a duplicate exists it is necessarily right under
+                #So we just have to compare a key we know is in common here I chose Section
                 surface_i += master.loc[i+k]['Surface reelle bati']
                 k += 1
             C_surface[i] = surface_i
         i += k
     del master['Surface reelle bati']
     master.insert(38,'Surface reelle bati', C_surface)
+    #we delete and replace the 'area colmun' by the new one (38 because that is the index of the column area in valeur fonciere)
     master_f = master.drop_duplicates(['Date mutation', 'Valeur fonciere', 'Section'], keep='first')
-    return(get_square_meter_price(master_f)) #On combine get square meter et mask
+    #Then we delete all the duplicates we compared before
+    return(get_square_meter_price(master_f)) #We combine get square meter et mask
 
 
 def get_square_meter_price(valeur_fonc_df):

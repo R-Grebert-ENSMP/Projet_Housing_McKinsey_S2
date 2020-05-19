@@ -1,4 +1,4 @@
-#import jellyfish
+import jellyfish
 import pandas as pd
 from immo.pipelines.data_engineering.global_variables import parameters
 import numpy as np
@@ -15,7 +15,7 @@ import geopandas
 
 #-------------------------------------------------------cleaned
 
-def normalisation(str_err):
+def normalisation (str_err):
     """
     Function to normalize a string through four steps :
     - replacing errors related to accents encoding
@@ -49,6 +49,20 @@ def normalisation(str_err):
     for long_name, abbr_name in parameters["norm_abbrevations"].items():
         str_abbreviate = str_abbreviate.replace(long_name, abbr_name)
     return str_abbreviate
+
+
+def normalisation_vf (valeur_fonciere):
+    vf_norm = valeur_fonciere.copy()
+    vf_norm[parameters["vf_street_name"]] = vf_norm[parameters["vf_street_name"]].apply(normalisation)
+    vf_norm[parameters["vf_street_type"]] = vf_norm[parameters["vf_street_type"]].apply(normalisation)
+    return vf_norm
+
+
+def normalisation_cad (cadastre):
+    cadastre_norm = cadastre.copy()
+    cadastre_norm[parameters["cad_street_name"]] = cadastre_norm[parameters["cad_street_name"]].apply(normalisation)
+    cadastre_norm[parameters["cad_street_type"]] = cadastre_norm[parameters["cad_street_type"]].apply(normalisation)
+    return cadastre_norm
 
 
 def compare(
@@ -91,11 +105,11 @@ def compare(
         return False
 
 # ------------------- Merger -------------------#
-
+#Il faudra rajouter , parameters["vf_square_meter_price"]
 def merger(
         clean_cadastre,
         clean_valeur_fonc,
-        columns_merger = [parameters["vf_price_nominal"], parameters["vf_built_area" ], parameters["vf_square_meter_price"]],
+        columns_merger = [parameters["vf_price_nominal"], parameters["vf_built_area"]],
         columns_cadastre_compare = [parameters["cad_street_num"], parameters["cad_street_type"], parameters["cad_street_name"]],
         columns_vf_compare = [parameters["vf_street_num"], parameters["vf_street_type"], parameters["vf_street_name"]]
         ):
@@ -138,7 +152,7 @@ def merger(
     indexec_columns_clean_valeur_fonc = [columns_clean_valeur_fonc.index(i) for i in columns_vf_compare] # Indexes of the columns in valeur_fonciere that we have to compare
 
     a = len(M1[:,0])
-    b = len(M1[:,0])
+    b = len(M2[:,0])
 
 
 #Since we are basing our comparison on the number, street type and street, I created a tuple with those 3 infos in it, this tuple needs to be modified if we are to compare other informations between the two sets
@@ -176,10 +190,10 @@ def sep_voies(cadastre_df):
     """
     # The pd.DataFrame.apply() method is the best to apply any type of function
     # It prevents from looping on pd df, which is very costly
-    cadastre_df[parameters["cad_street_type"]] = cadastre_df[parameters["cad_street_full"]].apply(
+    cadastre_df.loc[:,parameters["cad_street_type"]] = cadastre_df.loc[:,parameters["cad_street_full"]].apply(
         lambda x: x.split(" ")[0]
     )
-    cadastre_df[parameters["cad_street_name"]] = cadastre_df[parameters["cad_street_full"]].apply(
+    cadastre_df.loc[:,parameters["cad_street_name"]] = cadastre_df.loc[:,parameters["cad_street_full"]].apply(
         lambda x: " ".join(x.split(" ")[1:])
     )
     return cadastre_df.drop(parameters["cad_street_full"], axis=1)
@@ -243,26 +257,27 @@ def mask_duplica_vf(df_paris):
     master = df_paris.copy()
     length_paris = len(df_paris.index)
     master.index = [i for i in range (length_paris)] #Re-indexing the lines from 0 to the total number of lines
-    C_surface = np.array(master['Surface reelle bati']) #Creating a new column where the new areas are going to be in
+    C_surface = np.array(master.loc[:,parameters["vf_built_area"]]) #Creating a new column where the new areas are going to be in
     i = 0
     while i < length_paris-1:
         k = 1
-        surface_i = master.loc[i]['Surface reelle bati']
-        if master.duplicated(['Valeur fonciere', 'Date mutation', 'Section'])[i]:
+        surface_i = master.loc[i][parameters["vf_built_area"]]
+        if master.duplicated([parameters["vf_price_nominal"], parameters["vf_mutation_date"], parameters["vf_built_area"]])[i]:
             #This is to compare only lines where we know a duplicate only on 'Valeur fonciere', 'Date mutation', 'Section' exists
 
-            while master.loc[i]['Section'] == master.loc[i+k]['Section']:#If a duplicate exists it is necessarily right under
+            while master.loc[i][parameters["vf_built_area"]] == master.loc[i+k][parameters["vf_built_area"]]:#If a duplicate exists it is necessarily right under
                 #So we just have to compare a key we know is in common here I chose Section
-                surface_i += master.loc[i+k]['Surface reelle bati']
+                surface_i += master.loc[i+k][parameters["vf_built_area"]]
                 k += 1
             C_surface[i] = surface_i
         i += k
-    del master['Surface reelle bati']
-    master.insert(38,'Surface reelle bati', C_surface)
+    del master[parameters["vf_built_area"]]
+    master.insert(38,parameters["vf_built_area"], C_surface)
     #we delete and replace the 'area colmun' by the new one (38 because that is the index of the column area in valeur fonciere)
-    master_f = master.drop_duplicates(['Date mutation', 'Valeur fonciere', 'Section'], keep='first')
+    master_f = master.drop_duplicates([parameters["vf_mutation_date"], parameters["vf_price_nominal"],
+                                      parameters["vf_built_area"]])
     #Then we delete all the duplicates we compared before
-    return(get_square_meter_price(master_f)) #We combine get square meter et mask
+    return(master_f) #We combine get square meter et mask
 
 
 def get_square_meter_price(valeur_fonc_df):
@@ -275,7 +290,7 @@ def get_square_meter_price(valeur_fonc_df):
     Returns:
         pandas dataframe: the same dataframe, with the new vf_square_meter_price column.
     """
-    valeur_fonc_df[parameters["vf_square_meter_price"]] = (
+    valeur_fonc_df.loc[parameters["vf_square_meter_price"]] = (
         valeur_fonc_df[parameters["vf_price_nominal"]] / valeur_fonc_df[parameters["vf_built_area"]]
     ).round()
     # TO DO : catch the surface == 0 exception

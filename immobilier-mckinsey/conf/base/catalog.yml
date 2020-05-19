@@ -52,6 +52,12 @@ valeursfoncieres-2015:
   load_args:
     sep: '|'
 
+valeursfoncieres-2015-01:
+  type: pandas.CSVDataSet
+  filepath: data/01_raw/vf_75001.csv
+  load_args:
+    sep: ','
+
 valeursfoncieres-2016:
   type: pandas.CSVDataSet
   filepath: data/01_raw/valeursfoncieres-2016.txt
@@ -75,6 +81,12 @@ adresses-cadastre-75 :
  filepath: "data/01_raw/adresses-cadastre-75.csv"
  load_args:
   sep: ';'
+
+adresses-cadastre-75001 :
+ type : pandas.CSVDataSet
+ filepath: "data/01_raw/cadastre_75001.csv"
+ load_args:
+  sep: ','
 
 export-paris2014 : 
  type : pandas.CSVDataSet

@@ -8,6 +8,7 @@ parameters = {
 "vf_price_nominal" : "Valeur fonciere",
 "vf_built_area" : "Surface reelle bati",
 "vf_square_meter_price" : "prix_m2",
+"vf_mutation_date" : "Date mutation",
 # Cadastre table
 "cad_street_num" : "numero",
 "cad_street_full" : "voie_nom",

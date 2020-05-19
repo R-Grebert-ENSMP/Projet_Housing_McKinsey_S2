@@ -283,19 +283,20 @@ def mask_duplica_vf(df_paris):
 
 def get_square_meter_price(valeur_fonc_df):
     """
-    Corrects the vf_square_meter_price column in the "valeur foncière" table, as vf_price_nominal divided by vf_built_area.
-
+    Corrects the vf_square_meter_price column in the "valeur foncière" table, as vf_price_nominal divided by vf_built_area. Returns "undefined" where area = 0.
     Args:
         valeur_fonc_df (pandas dataframe): a dataframe with vf_price_nominal and vf_built_area columns.
-
     Returns:
         pandas dataframe: the same dataframe, with the new vf_square_meter_price column.
     """
-    valeur_fonc_df[parameters["vf_square_meter_price"]] = (
-        valeur_fonc_df[parameters["vf_price_nominal"]] / valeur_fonc_df[parameters["vf_built_area"]]
-    ).round()
-    # TO DO : catch the surface == 0 exception
-    return valeur_fonc_df
+    def exception(price,area) :
+        if area == 0 :
+            return "undefined"
+        else :
+            return price/area
+
+    valeur_fonc_df[parameters["vf_square_meter_price"]] = valeur_fonction_df.groupby([valeur_fonc_df[parameters["vf_price_nominal"]] , valeur_fonc_df[parameters["vf_built_area"]]]).apply(exception, axis = 1)
+    return valeur_fonc_de
 
 
 

@@ -291,10 +291,15 @@ def get_square_meter_price(valeur_fonc_df):
     Returns:
         pandas dataframe: the same dataframe, with the new vf_square_meter_price column.
     """
-    valeur_fonc_df[parameters["vf_square_meter_price"]] = (
-        valeur_fonc_df[parameters["vf_price_nominal"]] / valeur_fonc_df[parameters["vf_built_area"]]
-    ).round()
-    # TO DO : catch the surface == 0 exception
+    valeur_fonc_df.fillna(0)
+
+    if valeur_fonc_df[parameters["vf_built_area"]] != 0 :
+         valeur_fonc_df[parameters["vf_square_meter_price"]] = (
+         valeur_fonc_df[parameters["vf_price_nominal"]] / valeur_fonc_df[parameters["vf_built_area"]]
+         ).round()
+    else :
+        valeur_fonc_df[parameters["vf_square_meter_price"]] = 0
+
     return valeur_fonc_df
 
 

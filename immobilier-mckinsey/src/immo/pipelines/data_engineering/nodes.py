@@ -295,6 +295,23 @@ def get_square_meter_price(valeur_fonc_df):
 
     return master
 
+def create_master_table(
+   df_2014: pd.DataFrame, df_2015: pd.DataFrame, df_2016: pd.DataFrame, df_2017: pd.DataFrame, df_2018: pd.DataFrame
+) -> pd.DataFrame:
+
+
+    """Combines all data to create a master table.
+        Args:
+            df_201i = master table of preprocessed "valeur fonciere" data for the year 201i, already merged with cadastre
+        Returns:
+            Master table of merged vf from 2014 to 2018 with cadastre
+    """
+
+    frames = [df_2014,df_2015,df_2016,df_2017,df_2018]
+    master_table = pd.concat(frames)
+
+    return master_table
+
 #------------------------------------------------------------- not cleaned
 
 ##Nous avons finalement décidé de ne pas découper cadastre_75 en arrondissement

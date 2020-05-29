@@ -8,6 +8,7 @@ from immo.pipelines.data_engineering.nodes import (
     merger,
     get_square_meter_price,
     corr_type_de_voie_vf,
+    create_master_table
 )
 
 
@@ -43,7 +44,7 @@ def pipeline_merge_arrond_2014( **kwargs):
         node(func = merger,
              inputs = ['cadastre_normed', 'vf_paris_normed_15'],
              outputs = 'master_2015_75001',
-             name = 'master_2015-75001'),
+             name = 'master_2015_75001'),
 
         node(func=mask_duplica_vf,
              inputs='valeursfoncieres-2014-01',
@@ -60,7 +61,7 @@ def pipeline_merge_arrond_2014( **kwargs):
         node(func=merger,
              inputs=['cadastre_normed', 'vf_paris_normed_14'],
              outputs='master_2014_75001',
-             name='master_2014-75001'),
+             name='master_2014_75001'),
 
         node(func=mask_duplica_vf,
              inputs='valeursfoncieres-2016-01',
@@ -77,7 +78,7 @@ def pipeline_merge_arrond_2014( **kwargs):
         node(func=merger,
              inputs=['cadastre_normed', 'vf_paris_normed_16'],
              outputs='master_2016_75001',
-             name='master_2016-75001'),
+             name='master_2016_75001'),
 
         node(func=mask_duplica_vf,
              inputs='valeursfoncieres-2017-01',
@@ -94,7 +95,7 @@ def pipeline_merge_arrond_2014( **kwargs):
         node(func=merger,
              inputs=['cadastre_normed', 'vf_paris_normed_17'],
              outputs='master_2017_75001',
-             name='master_2017-75001'),
+             name='master_2017_75001'),
 
         node(func=mask_duplica_vf,
              inputs='valeursfoncieres-2018-01',
@@ -111,6 +112,13 @@ def pipeline_merge_arrond_2014( **kwargs):
         node(func=merger,
              inputs=['cadastre_normed', 'vf_paris_normed_18'],
              outputs='master_2018_75001',
-             name='master_2018-75001'),
+             name='master_2018_75001'
+             ),
+
+        node(func=create_master_table,
+             inputs=['master_2014_75001', 'master_2015_75001', 'master_2016_75001', 'master_2017_75001', 'master_2018_75001'],
+             outputs='master_table',
+             name='master_table'
+             )
         ]
     )

@@ -1,5 +1,5 @@
 import pandas as pd
-
+import numpy as np
 import time
 
 paris=pd.read_csv('Desktop/valeursfoncieres-2015.txt', sep='|', engine='python')
@@ -13,6 +13,7 @@ def mask_vf(df):
 
 def cond(df, code_postal, arrond):
     return df[df[code_postal] == arrond]
+vf_75001 = cond (paris, 'Code postal', 75001)
 
 def duplica(df_paris):
     master = df_paris

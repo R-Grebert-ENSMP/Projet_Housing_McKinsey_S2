@@ -46,6 +46,12 @@ valeursfoncieres-2014:
   load_args:
     sep: '|'
 
+valeursfoncieres-2014-01:
+  type: pandas.CSVDataSet
+  filepath: data/01_raw/vf_2014_75001.csv
+  load_args:
+    sep: ','
+
 valeursfoncieres-2015:
   type: pandas.CSVDataSet
   filepath: data/01_raw/valeursfoncieres-2015.txt
@@ -54,7 +60,7 @@ valeursfoncieres-2015:
 
 valeursfoncieres-2015-01:
   type: pandas.CSVDataSet
-  filepath: data/01_raw/vf_75001.csv
+  filepath: data/01_raw/vf_2015_75001.csv
   load_args:
     sep: ','
 
@@ -64,17 +70,35 @@ valeursfoncieres-2016:
   load_args:
     sep: '|'
 
+valeursfoncieres-2016-01:
+  type: pandas.CSVDataSet
+  filepath: data/01_raw/vf_2016_75001.csv
+  load_args:
+    sep: ','
+
 valeursfoncieres-2017:
   type: pandas.CSVDataSet
   filepath: data/01_raw/valeursfoncieres-2017.txt
   load_args:
     sep: '|'
 
+valeursfoncieres-2017-01:
+  type: pandas.CSVDataSet
+  filepath: data/01_raw/vf_2017_75001.csv
+  load_args:
+    sep: ','
+
 valeursfoncieres-2018:
   type: pandas.CSVDataSet
   filepath: data/01_raw/valeursfoncieres-2018.txt
   load_args:
     sep: '|'
+
+valeursfoncieres-2018-01:
+  type: pandas.CSVDataSet
+  filepath: data/01_raw/vf_2018_75001.csv
+  load_args:
+    sep: ','
 
 adresses-cadastre-75 : 
  type : pandas.CSVDataSet

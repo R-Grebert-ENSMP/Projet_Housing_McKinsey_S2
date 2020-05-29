@@ -283,19 +283,17 @@ def mask_duplica_vf(df_paris):
 def get_square_meter_price(valeur_fonc_df):
     """
     Corrects the vf_square_meter_price column in the "valeur foncière" table, as vf_price_nominal divided by vf_built_area.
-
     Args:
         valeur_fonc_df (pandas dataframe): a dataframe with vf_price_nominal and vf_built_area columns.
-
     Returns:
         pandas dataframe: the same dataframe, with the new vf_square_meter_price column.
     """
-    valeur_fonc_df.loc[parameters["vf_square_meter_price"]] = (
-        valeur_fonc_df[parameters["vf_price_nominal"]] / valeur_fonc_df[parameters["vf_built_area"]]
-    ).round()
-    # TO DO : catch the surface == 0 exception
-    return valeur_fonc_df
+    master = valeur_fonc_df.copy()
+    master['vf_square_meter_price'] = np.where(master[parameters["vf_built_area"]] == np.nan,
+                                                master[parameters["vf_price_nominal"]],
+                                               master[parameters["vf_price_nominal"]]/master[parameters["vf_built_area"]])
 
+    return master
 
 #------------------------------------------------------------- not cleaned
 

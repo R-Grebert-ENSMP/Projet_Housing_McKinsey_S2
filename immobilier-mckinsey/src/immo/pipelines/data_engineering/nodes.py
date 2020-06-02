@@ -277,7 +277,8 @@ def mask_duplica_vf(df_paris):
     master_f = master.drop_duplicates([parameters["vf_mutation_date"], parameters["vf_price_nominal"],
                                       parameters["vf_built_area"]])
     #Then we delete all the duplicates we compared before
-    return(master_f) #We combine get square meter et mask
+    return(get_square_meter_price(master_f)) #We combine get square meter et mask
+
 
 
 def get_square_meter_price(valeur_fonc_df):
@@ -288,12 +289,12 @@ def get_square_meter_price(valeur_fonc_df):
     Returns:
         pandas dataframe: the same dataframe, with the new vf_square_meter_price column.
     """
-    master = valeur_fonc_df.copy()
-    master['vf_square_meter_price'] = np.where(master[parameters["vf_built_area"]] == np.nan,
-                                                master[parameters["vf_price_nominal"]],
-                                               master[parameters["vf_price_nominal"]]/master[parameters["vf_built_area"]])
+    column_area = valeur_fonc_df[parameters["vf_built_area"]]
+    column_price = valeur_fonc_df[parameters["vf_price_nominal"]].str.replace(',', '.')
+    column_price = pd.to_numeric(column_price, errors = 'coerce')
+    valeur_fonc_df['vf_square_meter_price'] = column_price/column_area
 
-    return master
+    return valeur_fonc_df
 
 def create_master_table(
    df_2014: pd.DataFrame, df_2015: pd.DataFrame, df_2016: pd.DataFrame, df_2017: pd.DataFrame, df_2018: pd.DataFrame

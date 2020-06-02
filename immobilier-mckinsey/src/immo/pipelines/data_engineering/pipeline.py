@@ -14,7 +14,7 @@ from immo.pipelines.data_engineering.nodes import (
 
 
 
-def pipeline_merge_arrond_2014( **kwargs):
+def pipeline_merge_arrond( **kwargs):
     return Pipeline (
     [
         node(func = sep_voies,

@@ -136,12 +136,12 @@ def group_by_roads(master_table):
 
 
 ## TEST ON THE 1ST ARROND MASTERTABLE // CAREFULLE : LOCAL ADRESS NEEDS TO BE CHANGED
-master_1er_arrond = pd.read_csv(r'C:\Users\Raphael\Desktop\ENSMP\COURS ENSMP\INFO ENSMP\INFO S2\master_table_75001.csv')
+master_1er_arrond = pd.read_csv('master_table_75001.csv', sep =',')
 
 
 #print(master)
 
-data = group_by_roads(master)
+data = group_by_roads(master_1er_arrond)
 
 print('-------------------')
 print(data)

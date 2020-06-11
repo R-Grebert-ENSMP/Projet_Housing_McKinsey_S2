@@ -141,7 +141,7 @@ master_1er_arrond = pd.read_csv(r'C:\Users\Raphael\Desktop\ENSMP\COURS ENSMP\INF
 
 #print(master)
 
-data = group_by_roads(master)
+data = group_by_roads(master_1er_arrond)
 
 print('-------------------')
 print(data)
@@ -215,4 +215,4 @@ for name in street_names :
 master_street_test = pd.concat(all_streets_test)
 print(master_street_test)
 
-
+print('----------------------------------', df_test,'----------------------------------', df_test['Nom de voie'][1])

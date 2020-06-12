@@ -53,7 +53,7 @@ def add_exo_colleges(master_table, college_table):
     N = college_table.shape[0]
     #we create a full of 0 column for now
 
-    master_table ['middle_school'] = [0 for k in range(len(L))]
+    master_table ['middle_school'] = [0 for k in range(L)]
 
     for i in range(L) :
 
@@ -63,7 +63,7 @@ def add_exo_colleges(master_table, college_table):
 
                  master_table ['middle_school'][i] += 1
 
-
+    return master_table
 
 def add_exo_metros(master_table, metro_table):
 
@@ -78,7 +78,7 @@ def add_exo_metros(master_table, metro_table):
     N = metro_table.shape[0]
     #we create a full of 0 column for now
 
-    master_table ['acces_metros'] = [0 for k in range(len(L))]
+    master_table ['acces_metros'] = [0 for k in range(L)]
 
     for i in range(L) :
 
@@ -88,7 +88,7 @@ def add_exo_metros(master_table, metro_table):
 
                  master_table ['middle_school'][i] += 1
 
-
+    return master_table
 
 def add_exo_commerces(master_table, commerces_table):
 
@@ -104,7 +104,7 @@ def add_exo_commerces(master_table, commerces_table):
 
     #we create a full of 0 column for now
 
-    master_table ['commerces'] = [0 for k in range(len(L))]
+    master_table ['commerces'] = [0 for k in range(L)]
 
     for i in range(L) :
 
@@ -113,19 +113,19 @@ def add_exo_commerces(master_table, commerces_table):
             if dist_coord(master_table['long'][i],master_table['lat'][i],commerces_table['long'][j],commerces_table['lat'][j]) <= 1 :
 
                  master_table ['middle_school'][i] += 1
-
+    return master_table
 
 ##test ATTENTION CHEMINS LOCAUX A REDEFINIR SUR VOTRE APPAREIL
 
+ #attention au sep = ';'   !!!!!!!!!!!!!!!!!!!!!!
 
 master_1er_arrond = pd.read_csv(r'C:\Users\Raphael\Desktop\ENSMP\COURS ENSMP\INFO ENSMP\INFO S2\master_table_75001.csv')
 
-commerce_table = pd.read_csv(r'C:\Users\Raphael\Desktop\ENSMP\COURS ENSMP\INFO ENSMP\INFO S2\etalages-et-terrasses.csv')
+commerce_table = pd.read_csv(r'C:\Users\Raphael\Desktop\ENSMP\COURS ENSMP\INFO ENSMP\INFO S2\etalages-et-terrasses.csv', sep =';')
 
-metro_table = pd.read_csv(r'C:\Users\Raphael\Desktop\ENSMP\COURS ENSMP\INFO ENSMP\INFO S2\plan-de-voirie-acces-pietons-metro-et-parkings.csv')
+metro_table = pd.read_csv(r'C:\Users\Raphael\Desktop\ENSMP\COURS ENSMP\INFO ENSMP\INFO S2\plan-de-voirie-acces-pietons-metro-et-parkings.csv', sep =';')
 
-college_table = pd.read_csv(r'C:\Users\Raphael\Desktop\ENSMP\COURS ENSMP\INFO ENSMP\INFO S2\etablissements-scolaires-colleges.csv')
-
+college_table = pd.read_csv(r'C:\Users\Raphael\Desktop\ENSMP\COURS ENSMP\INFO ENSMP\INFO S2\etablissements-scolaires-colleges.csv', sep =';')
 
 
 master_0 = add_exo_colleges(master_1er_arrond,college_table)
@@ -134,7 +134,7 @@ master_1 = add_exo_metros(master_0,metro_table)
 
 new_master = add_exo_commerces(master_1,college_table)
 
-
+print(new_master)
 
 
 

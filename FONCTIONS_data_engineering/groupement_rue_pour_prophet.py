@@ -1,5 +1,5 @@
 import pandas as pd
-from immo.pipelines.data_engineering.global_variables import parameters
+#from immo.pipelines.data_engineering.global_variables import parameters
 import numpy as np
 import math
 import matplotlib.pyplot as plt

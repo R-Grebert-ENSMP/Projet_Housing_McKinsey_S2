@@ -3,14 +3,25 @@ import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-master = pd.read_csv(r'C:\Users\Raphael\Desktop\ENSMP\COURS ENSMP\INFO ENSMP\INFO S2\master_table_75001.csv')
+master = pd.read_csv(r'C:\Users\Raphael\Desktop\ENSMP\COURS ENSMP\INFO ENSMP\INFO S2\master_table_75001_2014.csv')
 master['vf_square_meter_price'] = master['vf_square_meter_price'].replace([np.inf, -np.inf], 0)
 master = master.loc[(master['vf_square_meter_price']>5000)]
-master = master.loc[(master['vf_square_meter_price']<100000)]#Filter the wring prices, prices under 5k€ square meter
+master = master.loc[(master['vf_square_meter_price']<100000)]#Filter the wring prices, prices under 5k€ square meter and above 100k
+
+#annual filter : we create a column with only the year, and then filter the mastertable on a certain year
+master['annee'] = pd.to_datetime(master['Date mutation'],format='%d/%m/%Y')
+master['annee'] = pd.DatetimeIndex(master['annee']).year
+master = master.loc[(master['annee'] == 2018)]
+
+
+
+
 max_lat = master['lat'].max()
 min_lat = master['lat'].min()
 max_long = master['long'].max()
 min_long = master['long'].min()
+
+
 
 M = np.array(master)
 columns = list(master.columns)
@@ -20,7 +31,7 @@ square_meter_price_idx = columns.index('vf_square_meter_price')
 
 master_cadrille = pd.DataFrame(columns = ['bottom_left','bottom_right', 'top_right', 'top_left', 'square_meter_price'])
 k = 0
-division = 10
+division = 40
 division_lat = np.linspace(min_lat, max_lat, division+1)
 division_long = np.linspace(min_long, max_long, division+1)
 P_lat = M[M[:, lat_idx] < division_lat[1]]
@@ -40,7 +51,8 @@ for i in division_lat[1:]:
 
 master_cadrille = master_cadrille.reset_index()
 
-#print(master_cadrille.head())
+#print(master_cadrille.columns)
+
 #
 # print(master_cadrille.head()['bottom_left'])
 # print(master_cadrille.head()['bottom_right'])

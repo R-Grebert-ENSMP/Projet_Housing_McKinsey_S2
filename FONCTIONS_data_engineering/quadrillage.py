@@ -8,10 +8,10 @@ master['vf_square_meter_price'] = master['vf_square_meter_price'].replace([np.in
 master = master.loc[(master['vf_square_meter_price']>5000)]
 master = master.loc[(master['vf_square_meter_price']<100000)]#Filter the wring prices, prices under 5k€ square meter and above 100k
 
-# #annual filter : we create a column with only the year, and then filter the mastertable on a certain year
-# master['annee'] = pd.to_datetime(master['Date mutation'],format='%d/%m/%Y')
-# master['annee'] = pd.DatetimeIndex(master['annee']).year
-# master = master.loc[(master['annee'] == 2018)]
+#annual filter : we create a column with only the year, and then filter the mastertable on a certain year
+master['annee'] = pd.to_datetime(master['Date mutation'],format='%d/%m/%Y')
+master['annee'] = pd.DatetimeIndex(master['annee']).year
+master = master.loc[(master['annee'] == 2018)]
 
 max_lat = master['lat'].max()
 min_lat = master['lat'].min()

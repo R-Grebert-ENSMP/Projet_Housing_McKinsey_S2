@@ -44,9 +44,10 @@ for year in ['2014', '2015', '2016', '2017', '2018']:
                 np.delete(M_year, idx_to_delete) #delete the elements already used
             k += 1
 
-print(master_quadrille)
 
 master_quadrille = master_quadrille.reset_index()
+
+#print(master_quadrille)
 
 #print(master_cadrille.columns)
 
@@ -75,8 +76,60 @@ for i,y in enumerate(master_quadrille['y']):
 
     master_quadrille['y'][i]  = (master_quadrille['bottom_right'][i][0] + master_quadrille['top_left'][i][0] )/2
 
-#print(master_cadrille)
+print(master_quadrille)
 
+print(master_quadrille['y'][4].type())
+
+##BUILDING DATA FOR PROPHET
+X = master_quadrille['x'].unique()
+Y = master_quadrille['y'].unique()
+master_ord = []
+
+all_years = [2014,2015,2016,2017,2018]
+
+for i,x in enumerate(X) :
+
+    for j,y in enumerate(Y):
+
+        line = [x,y]
+        s = 2013
+        for year in all_years :
+
+
+            for k,p in enumerate(master_quadrille['square_meter_price']):
+
+                if master_quadrille['x'][k] == x:
+
+                    if master_quadrille['y'][k] == y:
+
+                        if int(master_quadrille['year'][k]) == year:
+
+                            if year == s + 1:
+                                s = year
+                                line.append(p)
+                            else :
+                                if len(line)==2:
+                                    line.append(0)
+                                else :
+                                    line.append(line[-1])
+
+
+        if len(line) <= 7:
+            for k in range(7- len(line)):
+                line.append(0)
+        print(line)
+
+        bloc = pd.DataFrame([line], index = [f'{x},{y}'] , columns = ['x','y','2014','2015','2016','2017','2018'])
+        master_ord.append(bloc)
+
+master_ord = pd.concat(master_ord)
+
+
+print(master_ord)
+##
+M = master_ord.copy()
+
+##PLOTTING YEAR  2014 - 2018
 #----------------------------we use these coordinate to create a new dataframe with only x, y and square meter price values (and reverse it to have a geographically coherent map in the end)
 master_plot = master_quadrille.pivot_table( index='y', columns='x', values='square_meter_price' )
 

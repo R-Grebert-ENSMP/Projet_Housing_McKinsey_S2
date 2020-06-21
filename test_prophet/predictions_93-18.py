@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 m2_1er_93_13 = [2650, 3490, 2880, 2670, 2420, 2710, 2730, 3350, 3830, 3790, 4650, 5330, 5910, 6800, 7220, 8980, 8390, 8330, 9750, 10760, 10150]
 
-data = {'ds' : [datetime.date(k, 1, 1) for k in range(1993, 2019)], 'y' : m2_1er_93_13 + [9800, 9200, 10710, 12040, 11560]}
+data = {'ds' : [datetime.date(k, 1, 1) for k in range(1993, 2019)], 'y' : [k*2 for k in m2_1er_93_13] + [20000, 20500, 20710, 21050, 21700]}
 #data = {'ds' : [datetime.date(k, 1, 1) for k in range(1993, 2019)], 'y' : m2_1er_93_13 + [master_cadrille[f"{year}"]["idx"] for year in range(2014, 2019)]}
 df = pd.DataFrame(data, columns = ['ds', 'y'])
 

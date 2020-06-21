@@ -12,6 +12,9 @@ m2_1er_1993_2013 = [2650, 3490, 2880, 2670, 2420, 2710, 2730, 3350, 3830, 3790, 
 
 #create dataframe with predictions for 2019 (2018-12-31)
 predictions_2019 = []
+predictions_2020 = []
+predictions_2021 = []
+predictions_2022 = []
 
 for (x,y) in ... :
     unique_row = master_ord[(master_ord['lat'] = x) & (master_ord['long'] = y)]
@@ -20,17 +23,22 @@ for (x,y) in ... :
     df = pd.DataFrame(data, columns = ['ds', 'y'])
     m.fit(df)
     future_years = m.make_future_dataframe(periods = 4, freq = 'Y')
-
+    
+    #prediction for 4 years
     forecast_years = m.predict(future_years)
     forecast_years[['ds', 'yhat', 'yhat_lower', 'yhat_upper']].tail()
 
     #comparison with the real 2018
     df_cv = cross_validation(m, horizon = 10, period = '365,25 days')
 
-    #prediction model evalution
+    #prediction model evaluation
     df_p = performance_metrics(df_cv)
 
-    predictions_2019.append([lat, long, forecast_years["yhat"][26], forecast_years["yhat_lower"][26],forecast_years["yhat_upper"][26], df_p["rmse"][0]])
 
-df_pred = pd.DataFrame(predictions_2019, columns=['lat', 'long', 'mean_price_predicted', 'mean_price_predicted_lower', 'mean_price_predicted_upper', 'rmse'])
-print(df_pred)
+
+    predictions_2019.append([lat, long, forecast_years["yhat"][26], forecast_years["yhat_lower"][26],forecast_years["yhat_upper"][26], df_p["rmse"][0]])
+    predictions_2020.append([lat, long, forecast_years["yhat"][27], forecast_years["yhat_lower"][27],forecast_years["yhat_upper"][27], df_p["rmse"][0]])
+    predictions_2021.append([lat, long, forecast_years["yhat"][28], forecast_years["yhat_lower"][28],forecast_years["yhat_upper"][28], df_p["rmse"][0]])
+    predictions_2022.append([lat, long, forecast_years["yhat"][29], forecast_years["yhat_lower"][29],forecast_years["yhat_upper"][29], df_p["rmse"][0]])
+
+df_pred_2019 = pd.DataFrame(predictions_2019, columns=['lat', 'long', 'mean_price_predicted', 'mean_price_predicted_lower', 'mean_price_predicted_upper', 'rmse'])

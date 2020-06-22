@@ -35,7 +35,7 @@ long_idx = columns.index('long')
 square_meter_price_idx = columns.index('vf_square_meter_price')
 
 master_quadrille = pd.DataFrame(columns = ['year', 'bottom_left','bottom_right', 'top_right', 'top_left', 'square_meter_price'])
-division = 4
+division = 40
 
 division_lat = np.linspace(min_lat, max_lat, division+1)
 division_long = np.linspace(min_long, max_long, division+1)
@@ -132,6 +132,9 @@ predictions_2019 = []
 predictions_2020 = []
 predictions_2021 = []
 predictions_2022 = []
+predictions_2023 = []
+predictions_2024 = []
+
 
 for i in range(L):
 
@@ -144,7 +147,7 @@ for i in range(L):
 
     df = pd.DataFrame(data, columns = ['ds', 'y'])
     m.fit(df)
-    future_years = m.make_future_dataframe(periods = 4, freq = 'Y')
+    future_years = m.make_future_dataframe(periods = 6, freq = 'Y')
     
     #prediction for 4 years
     forecast_years = m.predict(future_years)
@@ -162,11 +165,25 @@ for i in range(L):
     predictions_2020.append([x, y, forecast_years["yhat"][27], forecast_years["yhat_lower"][27],forecast_years["yhat_upper"][27], df_p["rmse"][0]])
     predictions_2021.append([x, y, forecast_years["yhat"][28], forecast_years["yhat_lower"][28],forecast_years["yhat_upper"][28], df_p["rmse"][0]])
     predictions_2022.append([x, y, forecast_years["yhat"][29], forecast_years["yhat_lower"][29],forecast_years["yhat_upper"][29], df_p["rmse"][0]])
+    predictions_2023.append([x, y, forecast_years["yhat"][30], forecast_years["yhat_lower"][30],forecast_years["yhat_upper"][30], df_p["rmse"][0]])
+    predictions_2024.append([x, y, forecast_years["yhat"][31], forecast_years["yhat_lower"][31],forecast_years["yhat_upper"][31], df_p["rmse"][0]])
+
 
 df_pred_2019 = pd.DataFrame(predictions_2019, columns=['x', 'y', 'mean_price_predicted', 'mean_price_predicted_lower', 'mean_price_predicted_upper', 'rmse'])
 df_pred_2020 = pd.DataFrame(predictions_2020, columns=['x', 'y', 'mean_price_predicted', 'mean_price_predicted_lower', 'mean_price_predicted_upper', 'rmse'])
 df_pred_2021 = pd.DataFrame(predictions_2021, columns=['x', 'y', 'mean_price_predicted', 'mean_price_predicted_lower', 'mean_price_predicted_upper', 'rmse'])
 df_pred_2022 = pd.DataFrame(predictions_2022, columns=['x', 'y', 'mean_price_predicted', 'mean_price_predicted_lower', 'mean_price_predicted_upper', 'rmse'])
+df_pred_2023 = pd.DataFrame(predictions_2023, columns=['x', 'y', 'mean_price_predicted', 'mean_price_predicted_lower', 'mean_price_predicted_upper', 'rmse'])
+df_pred_2024 = pd.DataFrame(predictions_2024, columns=['x', 'y', 'mean_price_predicted', 'mean_price_predicted_lower', 'mean_price_predicted_upper', 'rmse'])
+
+
+prediction_2019 = df_pred_2019.to_csv(path_or_buf = r'C:\Users\Corentin Hennion\Desktop\ProjetMcKinsey\prediction_2019.csv')
+prediction_2020 = df_pred_2020.to_csv(path_or_buf = r'C:\Users\Corentin Hennion\Desktop\ProjetMcKinsey\prediction_2020.csv')
+prediction_2021 = df_pred_2021.to_csv(path_or_buf = r'C:\Users\Corentin Hennion\Desktop\ProjetMcKinsey\prediction_2021.csv')
+prediction_2022 = df_pred_2022.to_csv(path_or_buf = r'C:\Users\Corentin Hennion\Desktop\ProjetMcKinsey\prediction_2022.csv')
+prediction_2023 = df_pred_2023.to_csv(path_or_buf = r'C:\Users\Corentin Hennion\Desktop\ProjetMcKinsey\prediction_2023.csv')
+prediction_2024 = df_pred_2024.to_csv(path_or_buf = r'C:\Users\Corentin Hennion\Desktop\ProjetMcKinsey\prediction_2024.csv')
+
 
 
 

@@ -147,13 +147,8 @@ for i in range(L):
     df = pd.DataFrame(data, columns = ['ds', 'y'])
     m.fit(df)
     future_years = m.make_future_dataframe(periods = 6, freq = 'Y')
-<<<<<<< HEAD
     
     #prediction for 6 years
-=======
-
-    #prediction for 4 years
->>>>>>> 09f3f2b53b46491e376de0485d395fc4f619e69b
     forecast_years = m.predict(future_years)
     forecast_years[['ds', 'yhat', 'yhat_lower', 'yhat_upper']].tail()
 

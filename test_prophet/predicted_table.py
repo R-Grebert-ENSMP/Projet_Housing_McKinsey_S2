@@ -121,13 +121,13 @@ master_ord = pd.concat(master_ord)
 L = len(master_ord['x'])
 
 #---------------------------------------------------------------------------------------
-
+#PREDICTIONS
 
 
 #older mean prices add to our recent and precise data to have less biased preditions
 m2_1er_1993_2013 = [2650, 3490, 2880, 2670, 2420, 2710, 2730, 3350, 3830, 3790, 4650, 5330, 5910, 6800, 7220, 8980, 8390, 8330, 9750, 10760, 10150]
 
-#create dataframe with predictions for 2019 (2018-12-31)
+#create dataframe with predictions for next 6 years after 2018
 predictions_2019 = []
 predictions_2020 = []
 predictions_2021 = []
@@ -139,9 +139,8 @@ predictions_2024 = []
 for i in range(L):
 
     x,y = master_ord['x'][i], master_ord['y'][i]
-   # unique_row = master_ord[(master_ord['lat'] = x) & (master_ord['long'] = y)]
+    #Prophet take as input a dataframe with a column ds (dates) and timeseries to forecast (prices since 1993)
     data = {'ds' : [datetime.date(k, 1, 1) for k in range(1993, 2019)], 'y' : [k*master_ord['2014'][i]/9800 for k in m2_1er_1993_2013] + [master_ord['2014'][i], master_ord['2015'][i], master_ord['2016'][i], master_ord['2017'][i], master_ord['2018'][i]]}
-   # [unique_row[f"{year}"][0] for year in range(2014, 2019)]
 
     m = Prophet()
 
@@ -149,7 +148,7 @@ for i in range(L):
     m.fit(df)
     future_years = m.make_future_dataframe(periods = 6, freq = 'Y')
     
-    #prediction for 4 years
+    #prediction for 6 years
     forecast_years = m.predict(future_years)
     forecast_years[['ds', 'yhat', 'yhat_lower', 'yhat_upper']].tail()
 
@@ -177,12 +176,14 @@ df_pred_2023 = pd.DataFrame(predictions_2023, columns=['x', 'y', 'mean_price_pre
 df_pred_2024 = pd.DataFrame(predictions_2024, columns=['x', 'y', 'mean_price_predicted', 'mean_price_predicted_lower', 'mean_price_predicted_upper', 'rmse'])
 
 
-prediction_2019 = df_pred_2019.to_csv(path_or_buf = r'C:\Users\Corentin Hennion\Desktop\ProjetMcKinsey\prediction_2019.csv')
-prediction_2020 = df_pred_2020.to_csv(path_or_buf = r'C:\Users\Corentin Hennion\Desktop\ProjetMcKinsey\prediction_2020.csv')
-prediction_2021 = df_pred_2021.to_csv(path_or_buf = r'C:\Users\Corentin Hennion\Desktop\ProjetMcKinsey\prediction_2021.csv')
-prediction_2022 = df_pred_2022.to_csv(path_or_buf = r'C:\Users\Corentin Hennion\Desktop\ProjetMcKinsey\prediction_2022.csv')
-prediction_2023 = df_pred_2023.to_csv(path_or_buf = r'C:\Users\Corentin Hennion\Desktop\ProjetMcKinsey\prediction_2023.csv')
-prediction_2024 = df_pred_2024.to_csv(path_or_buf = r'C:\Users\Corentin Hennion\Desktop\ProjetMcKinsey\prediction_2024.csv')
+#saving predictions to plot then
+
+#prediction_2019 = df_pred_2019.to_csv(path_or_buf = r'C:\Users\Corentin Hennion\Desktop\ProjetMcKinsey\prediction_2019.csv')
+#prediction_2020 = df_pred_2020.to_csv(path_or_buf = r'C:\Users\Corentin Hennion\Desktop\ProjetMcKinsey\prediction_2020.csv')
+#prediction_2021 = df_pred_2021.to_csv(path_or_buf = r'C:\Users\Corentin Hennion\Desktop\ProjetMcKinsey\prediction_2021.csv')
+#prediction_2022 = df_pred_2022.to_csv(path_or_buf = r'C:\Users\Corentin Hennion\Desktop\ProjetMcKinsey\prediction_2022.csv')
+#prediction_2023 = df_pred_2023.to_csv(path_or_buf = r'C:\Users\Corentin Hennion\Desktop\ProjetMcKinsey\prediction_2023.csv')
+#prediction_2024 = df_pred_2024.to_csv(path_or_buf = r'C:\Users\Corentin Hennion\Desktop\ProjetMcKinsey\prediction_2024.csv')
 
 
 

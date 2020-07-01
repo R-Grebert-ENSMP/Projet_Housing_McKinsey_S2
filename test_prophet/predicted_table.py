@@ -147,8 +147,13 @@ for i in range(L):
     df = pd.DataFrame(data, columns = ['ds', 'y'])
     m.fit(df)
     future_years = m.make_future_dataframe(periods = 6, freq = 'Y')
+<<<<<<< HEAD
     
     #prediction for 6 years
+=======
+
+    #prediction for 4 years
+>>>>>>> 09f3f2b53b46491e376de0485d395fc4f619e69b
     forecast_years = m.predict(future_years)
     forecast_years[['ds', 'yhat', 'yhat_lower', 'yhat_upper']].tail()
 
@@ -209,6 +214,6 @@ master_plot = master_plot.iloc[::-1 ]
 
 #we plot a heatmap
 
-p2=sns.heatmap(master_plot)
+p2=sns.heatmap(master_plot, vmin=0, vmax=50000)
 
 plt.show()

@@ -26,7 +26,7 @@ long_idx = columns.index('long')
 square_meter_price_idx = columns.index('vf_square_meter_price')
 
 master_quadrille = pd.DataFrame(columns = ['year', 'bottom_left','bottom_right', 'top_right', 'top_left', 'square_meter_price'])
-division = 40
+division = 20
 division_lat = np.linspace(min_lat, max_lat, division+1)
 division_long = np.linspace(min_long, max_long, division+1)
 k = 0

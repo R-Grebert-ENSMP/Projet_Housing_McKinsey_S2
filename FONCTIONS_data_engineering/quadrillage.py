@@ -13,7 +13,7 @@ master = pd.read_csv(r'C:\Users\Raphael\Desktop\ENSMP\COURS ENSMP\INFO ENSMP\INF
 
 
 
-def quad(df, Y=2018, D = 40):
+def quad(df, Y=None, D = 40):
 
     '''
     This function is used to implement our final choice of spacial sampling : we discretize a zone (we worked on the 1st disctrict of Paris) with a grid, based on the latitude and longitude.
@@ -34,8 +34,9 @@ def quad(df, Y=2018, D = 40):
     master['annee'] = pd.to_datetime(master['Date mutation'],format='%d/%m/%Y')
     master['annee'] = pd.DatetimeIndex(master['annee']).year
 
-    #this line below allows the choi
-    master = master.loc[(master['annee'] == Y)]
+    #this line below allows the choice of the year
+    if Y != None:
+        master = master.loc[(master['annee'] == Y)]
 
 
     #---------------------------Creating the spatial grid---------------------------------------------------
